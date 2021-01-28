@@ -163,23 +163,28 @@ func buildMessage(output string, messageType string, d interface{}) {
 	var message *logMessage
 	var prettyMessage string
 
+	time := time.Now()
+	formattedTime := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d-00:00",
+		time.Year(), time.Month(), time.Day(),
+		time.Hour(), time.Minute(), time.Second())
+
 	if loggerSingleton.format == JSON {
 		if d == nil {
 			// Format message.
-			message = newMessage(time.Now().Format("2006-01-02T15:04:05Z07:00"), messageType, output)
+			message = newMessage(formattedTime, messageType, output)
 		} else {
 			// Format message.
-			message = newMessage(time.Now().Format("2006-01-02T15:04:05Z07:00"), messageType, output, d)
+			message = newMessage(formattedTime, messageType, output, d)
 		}
 
 		fmt.Println(message.JSONString())
 	} else {
 		if d == nil {
 			// Format message.
-			prettyMessage = fmt.Sprintf("%v [%s] %s", time.Now().Format("2013-10-11T22:14:15.003Z"), messageType, output)
+			prettyMessage = fmt.Sprintf("%v [%s] %s", formattedTime, messageType, output)
 		} else {
 			// Format message.
-			prettyMessage = fmt.Sprintf("%v [%s] %s %+v", time.Now().Format("2013-10-11T22:14:15.003Z"), messageType, output, d)
+			prettyMessage = fmt.Sprintf("%v [%s] %s %+v", formattedTime, messageType, output, d)
 		}
 
 		fmt.Println(prettyMessage)
