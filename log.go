@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var loggerSingleton *logger
+var LoggerSingleton *logger
 
 // Level defined the type for a log level.
 type Level int
@@ -54,12 +54,12 @@ type logMessage struct {
 
 // SetupLogger creates a new logger.
 func SetupLogger(level Level, tags []string, debugMode bool, format Format) {
-	if loggerSingleton != nil {
+	if LoggerSingleton != nil {
 		return
 	}
 
 	// Setup logger with options.
-	loggerSingleton = &logger{
+	LoggerSingleton = &logger{
 		Level:     level,
 		tags:      tags,
 		debugMode: debugMode,
@@ -156,7 +156,7 @@ func Fatald(output string, d interface{}) {
 // MARK: Private
 
 func buildMessage(output string, messageType string, d interface{}) {
-	if loggerSingleton.Level > LogLevelDebug {
+	if LoggerSingleton.Level > LogLevelDebug {
 		return
 	}
 
@@ -168,7 +168,7 @@ func buildMessage(output string, messageType string, d interface{}) {
 		time.Year(), time.Month(), time.Day(),
 		time.Hour(), time.Minute(), time.Second())
 
-	if loggerSingleton.format == JSON {
+	if LoggerSingleton.format == JSON {
 		if d == nil {
 			// Format message.
 			message = newMessage(formattedTime, messageType, output)
@@ -192,7 +192,7 @@ func buildMessage(output string, messageType string, d interface{}) {
 }
 
 func tagList() string {
-	return strings.Join(loggerSingleton.tags, ",")
+	return strings.Join(LoggerSingleton.tags, ",")
 }
 
 func newMessage(timestamp string, level string, message string, data ...interface{}) *logMessage {
