@@ -2,17 +2,25 @@ package log
 
 import (
 	"testing"
-	"time"
 )
 
 func TestSetupSingleLogger(t *testing.T) {
-	SetupLogger(0, []string{"test"}, false, Pretty)
+	SetupLogger(LogLevelDebug, LogFormatPretty, false, []string{"test"})
+	Infoln("This is an info statement.")
+}
 
+func TestSetupLocalLogger(t *testing.T) {
+	SetupLocalLogger(LogLevelInfo)
+	Infoln("This is an info statement.")
+}
+
+func TestSetupCloudLogger(t *testing.T) {
+	SetupCloudLogger(LogLevelInfo, []string{"test"})
 	Infoln("This is an info statement.")
 }
 
 func TestInfod(t *testing.T) {
-	SetupLogger(0, []string{"test"}, false, Pretty)
+	SetupLocalLogger(LogLevelDebug)
 
 	type testStruct struct {
 		Name string
@@ -24,9 +32,7 @@ func TestInfod(t *testing.T) {
 		Kind: "Log",
 	}
 
-	Infod("This is some data", test)
-
-	time.Sleep(3 * time.Second)
+	Infodln("This is some data.", test)
 }
 
 func TestDebugln(t *testing.T) {
@@ -34,7 +40,7 @@ func TestDebugln(t *testing.T) {
 }
 
 func TestDebugf(t *testing.T) {
-	Debugf("This is a debug statement %d.", 10000)
+	Debugf("This is a debug statement %d.\n", 10000)
 }
 
 func TestInfoln(t *testing.T) {
@@ -42,7 +48,7 @@ func TestInfoln(t *testing.T) {
 }
 
 func TestInfof(t *testing.T) {
-	Infof("This is an info statement %d.", 10000)
+	Infof("This is an info statement %d.\n", 10000)
 }
 
 func TestWarnln(t *testing.T) {
@@ -50,7 +56,7 @@ func TestWarnln(t *testing.T) {
 }
 
 func TestWarnf(t *testing.T) {
-	Warnf("This is a warning %d.", 10000)
+	Warnf("This is a warning %d.\n", 10000)
 }
 
 func TestErrorln(t *testing.T) {
@@ -58,13 +64,13 @@ func TestErrorln(t *testing.T) {
 }
 
 func TestErrorf(t *testing.T) {
-	Errorf("This is an error %d.", 10000)
+	Errorf("This is an error %d.\n", 10000)
 }
 
 func TestFatalln(t *testing.T) {
-	Fatalln("This is an error.")
+	Fatalln("This is fatal error.")
 }
 
 func TestFatalf(t *testing.T) {
-	Fatalf("This is an error %d.", 10000)
+	Fatalf("This is a fatal error %d.\n", 10000)
 }
