@@ -6,13 +6,13 @@ This package provides a singular interface to create logs as well as filtering t
 
 The logger mimics the `log` package's `Println`, `Printf`, `Fatalln` and `Fatalf` functions with some extra features.
 
-	* Log levels
-	* JSON formatted output
-	* Tags
-	* Colorized output
-	* Exact timestamps
-	* File and line numbers
-	* Attach data to logs
+	- [X] Log levels
+	- [X] JSON formatted output
+	- [X] Tags
+	- [X] Colorized output
+	- [X] Exact timestamps
+	- [X] File and line numbers
+	- [X] Attach data to logs
 
 ## Installing
 
@@ -34,13 +34,7 @@ Call `SetupLocalLogger` to setup local logging with the desired log level.
 log.SetupLocalLogger(LogLevelDebug)
 ```
 
-Local logging contains:
-
-	* Pretty output
-	* Colorized output
-	* No tags
-
-The local logger outputs logs like the following:
+Local logging contains pretty output, colorized output and no tags. The local logger outputs logs like the following:
 
 ![Local Logs](images/local.png)
 
@@ -52,13 +46,7 @@ Call `SetupCloudLogger` to set up cloud logging with the desired log level and t
 log.SetupCloudLogger(LogLevelInfo, []string{"test", "tags"})
 ```
 
-Cloud logging contains:
-
-	* JSON output
-	* Non-colorized output
-	* Tags
-
-The cloud logger outputs logs like the following:
+Cloud logging contains JSON output, non-colorized output and tags. The cloud logger outputs logs like the following:
 
 ![Local Logs](images/cloud.png)
 
