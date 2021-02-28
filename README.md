@@ -110,9 +110,9 @@ import (
 func main() {
 	// Setup the logger
 	if os.Getenv("LOGGING") == "local" {
-		log.SetupLocalLogger(LogLevelDebug)
+		log.SetupLocalLogger(log.LogLevelDebug)
 	} else {
-		log.SetupCloudLogger(LogLevelInfo, []string{"test", "tags"})
+		log.SetupCloudLogger(log.LogLevelInfo, []string{"test", "tags"})
 	}
 
 	// Print info statement
