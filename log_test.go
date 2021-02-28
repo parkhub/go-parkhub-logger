@@ -15,7 +15,7 @@ func TestSetupLocalLogger(t *testing.T) {
 }
 
 func TestSetupCloudLogger(t *testing.T) {
-	SetupCloudLogger(LogLevelInfo, []string{"test"})
+	SetupCloudLogger(LogLevelInfo, []string{"test", "tags"})
 	Infoln("This is an info statement.")
 }
 

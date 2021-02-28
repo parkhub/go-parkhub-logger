@@ -4,12 +4,103 @@ This package provides a singular interface to create logs as well as filtering t
 
 ## Installing
 
-### ([godoc](//godoc.org/github.com/parkhub/go-parkhub-logger))
+Add this package to your project's mod file.
 
-    go get github.com/parkhub/go-parkhub-logger
-
-## Setting up your logger
+```bash
+$ go get github.com/parkhub/go-parkhub-logger
 ```
+
+## Setup
+
+The package contains a couple of setup convenience methods for local and cloud development.
+
+### Local Logging
+
+Call `SetupLocalLogger` to setup local logging with the desired log level.
+
+```go
+log.SetupLocalLogger(LogLevelDebug)
+```
+
+Local logging contains:
+
+	- Pretty output
+	- Colorized output
+	- No tags
+
+The local logger outputs logs like the following:
+
+![Local Logs](images/local.png)
+
+### Cloud Logging
+
+Call `SetupCloudLogger` to set up cloud logging with the desired log level and tags.
+
+```go
+log.SetupCloudLogger(LogLevelInfo, []string{"test", "tags"})
+```
+
+Cloud logging contains:
+
+	- JSON output
+	- Non-colorized output
+	- Tags
+
+The cloud logger outputs logs like the following:
+
+![Local Logs](images/cloud.png)
+
+### Custom Logging
+
+Call `SetupLogger` to specify your own properties.
+
+```go
+// Setup the logger with
+// - Debug log level
+// - Pretty output
+// - Non-colorized output
+// - Use the tags "live" and "analytics"
+SetupLogger(LogLevelDebug, LogFormatPretty, false, []string{"live", "analytics"})
+```
+
+## Features
+
+The logger mimics the `log` package's `Println`, `Printf`, `Fatalln` and `Fatalf` functions with some extra features.
+
+### Printing Data
+
+Along with the usual "ln" and "f" print functions, the logger includes functions for attaching data to a log using the `Debugd`, `Infod`, etc. and `Debugdln`, `Infodln`, etc. functions.
+
+The following:
+
+```go
+type testStruct struct {
+	Name string
+	Kind string
+}
+
+test := &testStruct{
+	Name: "Logan",
+	Kind: "Log",
+}
+
+log.Warnd("Unable to consume object data.\n", test)
+// Or
+log.Warndln("Unable to consume object data.", test)
+```
+
+Produces the output:
+
+```bash
+2021-02-27T18:08:48-74:94 [WARN] Unable to consume object data. &{Name:Logan Kind:Log}
+2021-02-27T18:08:48-74:94 [WARN] Unable to consume object data. &{Name:Logan Kind:Log}
+```
+
+The `Debugd`, `Infod`, `Warnd`, etc. functions handle trailing newlines in the output log by moving the newline to the end of the log _after_ the data's formatted output.
+
+## Example
+
+```go
 package main
 
 import (
@@ -17,7 +108,12 @@ import (
 )
 
 func main() {
-	log.SetupLogger(LogLevelInfo, []string{"test"}, false, Pretty)
+	// Setup the logger
+	if os.Getenv("LOGGING") == "local" {
+		log.SetupLocalLogger(LogLevelDebug)
+	} else {
+		log.SetupCloudLogger(LogLevelInfo, []string{"test", "tags"})
+	}
 
 	// Print info statement
 	log.Infoln("This is an info statement.")
@@ -33,36 +129,36 @@ func main() {
 		Kind: "Log",
 	}
 
-	log.Infod("This is some text", test)
+	log.Infodln("This is some text", test)
 
 	// Print debug text
 	log.Debugln("This is a debug statement.")
 
 	// Print debug text with additional data.
-	log.Debugf("This is a debug statement %d.", 10000)
+	log.Debugf("This is a debug statement %d.\n", 10000)
 
 	// Print info text
 	log.Infoln("This is an info statement.")
 
 	// Print info text with additional data.
-	log.Infof("This is an info statement %d.", 10000)
+	log.Infof("This is an info statement %d.\n", 10000)
 
 	// Print warn text
 	log.Warnln("This is a warning.")
 
 	// Print warn text with additional data.
-	log.Warnf("This is a warning %d.", 10000)
+	log.Warnf("This is a warning %d.\n", 10000)
 
 	// Print error text
 	log.Errorln("This is an error.")
 
 	// Print error text with additional data.
-	log.Errorf("This is an error %d.", 10000)
+	log.Errorf("This is an error %d.\n", 10000)
 
 	// Print fatal text
 	log.Fatalln("This is an error.")
 
 	// Print fatal text with additional data.
-	log.Fatalf("This is an error %d.", 10000)
+	log.Fatalf("This is an error %d.\n", 10000)
 }
 ```
