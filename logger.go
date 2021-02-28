@@ -11,6 +11,7 @@ type logger struct {
 	format         Format
 	tags           []string
 	colorizeOutput bool
+	logCaller      bool
 }
 
 // MARK: Private methods
@@ -26,6 +27,7 @@ func (l logger) printMessage(output string, level Level, fatal bool, d interface
 		newLogMessage(
 			l.format,
 			l.colorizeOutput,
+			l.logCaller,
 			newLogTime(time.Now()),
 			level,
 			l.tags,

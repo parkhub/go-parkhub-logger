@@ -3,6 +3,7 @@ package log
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/ttacon/chalk"
@@ -14,15 +15,17 @@ type logMessage struct {
 	Tags      []string    `json:"tags"`
 	Message   string      `json:"message"`
 	Metadata  interface{} `json:"metadata,omitempty"`
+	File      string      `json:"file,omitempty"`
 
 	format         Format `json:"-"`
 	rawLevel       Level  `json:"-"`
 	colorize       bool   `json:"-"`
+	logCaller      bool   `json:"-"`
 	trimmedNewline bool   `json:"-"`
 }
 
 // newLogMessage creates a new log message.
-func newLogMessage(format Format, colorize bool, time logTime, level Level, tags []string, message string, data interface{}) *logMessage {
+func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, level Level, tags []string, message string, data interface{}) *logMessage {
 	modifiedMessage := message
 	hasSuffix := false
 
@@ -32,15 +35,35 @@ func newLogMessage(format Format, colorize bool, time logTime, level Level, tags
 		modifiedMessage = message[:len(message)-1]
 	}
 
+	caller := ""
+	if logCaller {
+		var file string
+		var line int
+		var ok bool
+		_, file, line, ok = runtime.Caller(4)
+		if ok {
+			fileComponents := strings.Split(file, "/")
+			if len(fileComponents) > 1 {
+				file = fileComponents[len(fileComponents)-1]
+			}
+		} else {
+			file = "???"
+			line = 0
+		}
+		caller = fmt.Sprintf("%s:%d", file, line)
+	}
+
 	formatedMessage := &logMessage{
 		Timestamp:      time.String(),
 		Level:          level.String(),
 		Tags:           tags,
 		Message:        modifiedMessage,
 		Metadata:       data,
+		File:           caller,
 		format:         format,
 		rawLevel:       level,
 		colorize:       colorize,
+		logCaller:      logCaller,
 		trimmedNewline: hasSuffix,
 	}
 
@@ -79,6 +102,10 @@ func (m logMessage) String() string {
 	}
 
 	prettyMessage := fmt.Sprintf("%s [%s] ", m.Timestamp, m.Level)
+
+	if m.logCaller {
+		prettyMessage += fmt.Sprintf("[%s] ", m.File)
+	}
 
 	if len(m.Tags) > 0 {
 		prettyMessage += fmt.Sprintf("(%s) ", strings.Join(m.Tags, ","))

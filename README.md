@@ -2,6 +2,18 @@
 
 This package provides a singular interface to create logs as well as filtering them out based on level.  It also provides two types of formatting json, pretty.  This logger doesn't ship any logs.
 
+## Features
+
+The logger mimics the `log` package's `Println`, `Printf`, `Fatalln` and `Fatalf` functions with some extra features.
+
+	- Log levels
+	- JSON formatted output
+	- Tags
+	- Colorized output
+	- Exact timestamps
+	- File and line numbers
+	- Attach data to logs
+
 ## Installing
 
 Add this package to your project's mod file.
@@ -59,15 +71,12 @@ Call `SetupLogger` to specify your own properties.
 // - Debug log level
 // - Pretty output
 // - Non-colorized output
+// - File and line numbers
 // - Use the tags "live" and "analytics"
-SetupLogger(LogLevelDebug, LogFormatPretty, false, []string{"live", "analytics"})
+SetupLogger(LogLevelDebug, LogFormatPretty, false, true, []string{"live", "analytics"})
 ```
 
-## Features
-
-The logger mimics the `log` package's `Println`, `Printf`, `Fatalln` and `Fatalf` functions with some extra features.
-
-### Printing Data
+## Printing Data
 
 Along with the usual "ln" and "f" print functions, the logger includes functions for attaching data to a log using the `Debugd`, `Infod`, etc. and `Debugdln`, `Infodln`, etc. functions.
 
