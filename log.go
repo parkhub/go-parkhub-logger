@@ -1,73 +1,52 @@
+// Package log provides a singular interface to create logs as well as filtering
+// them out based on level. It also provides two types of formatting; json or
+// pretty. The logger doesn't ship any logs.
 package log
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
 )
 
+// LoggerSingleton is the main logging instance.
 var LoggerSingleton *logger
 
-// Level defined the type for a log level.
-type Level int
+// MARK: Setup functions
 
-// Format visual format of the log message.
-type Format string
-
-const (
-	// LogLevelDebug debug log level.
-	LogLevelDebug Level = 0
-
-	// LogLevelInfo info log level.
-	LogLevelInfo Level = 1
-
-	// LogLevelWarn warn log level.
-	LogLevelWarn Level = 2
-
-	// LogLevelError error log level.
-	LogLevelError Level = 3
-
-	// LogLevelFatal fatal log level.
-	LogLevelFatal Level = 4
-
-	// Pretty is a non json formatted log output.
-	Pretty Format = "pretty"
-
-	// JSON is a json formatted log output.
-	JSON Format = "json"
-)
-
-type logger struct {
-	Level     Level
-	tags      []string
-	debugMode bool
-	format    Format
+// SetupLocalLogger is a convenience function for calling SetupLogger with
+// pretty formatted logs, colorized output and no tags.
+func SetupLocalLogger(level Level) {
+	SetupLogger(level, LogFormatPretty, true, true, nil)
 }
 
-type logMessage struct {
-	Timestamp string      `json:"timestamp"`
-	Level     string      `json:"level"`
-	Message   string      `json:"message"`
-	Metadata  interface{} `json:"metadata"`
+// SetupCloudLogger is a convenience function for calling SetupLogger with
+// JSON formatted logs, non-colorized output and the given tags.
+func SetupCloudLogger(level Level, tags []string) {
+	SetupLogger(level, LogFormatJSON, false, true, tags)
 }
 
 // SetupLogger creates a new logger.
-func SetupLogger(level Level, tags []string, debugMode bool, format Format) {
+func SetupLogger(level Level, format Format, colorizeOutput bool, logCaller bool, tags []string) {
 	if LoggerSingleton != nil {
-		return
+		// If the logger has already been created, then update its properties
+		LoggerSingleton.level = level
+		LoggerSingleton.format = format
+		LoggerSingleton.colorizeOutput = colorizeOutput
+		LoggerSingleton.tags = tags
 	}
 
 	// Setup logger with options.
 	LoggerSingleton = &logger{
-		Level:     level,
-		tags:      tags,
-		debugMode: debugMode,
-		format:    format,
+		level:          level,
+		format:         format,
+		colorizeOutput: colorizeOutput,
+		logCaller:      logCaller,
+		tags:           tags,
 	}
 }
 
-// Stdln prints the output.
+// MARK: Standard output
+
+// Stdln prints the output followed by a newline.
 func Stdln(output string) {
 	fmt.Println(output)
 }
@@ -77,143 +56,122 @@ func Stdf(format string, a ...interface{}) {
 	fmt.Printf(format, a...)
 }
 
-// Debugln prints the output.
-func Debugln(output string) {
-	Debugd(output, nil)
+// Stdd prints output string and data.
+func Stdd(output string, d interface{}) {
+	fmt.Printf(fmt.Sprintf("%s %+v", output, d))
 }
 
-// Debugd prints output string and data.
-func Debugd(output string, d interface{}) {
-	buildMessage(output, "DEBUG", d)
+// Stddln prints output string and data followed by a newline.
+func Stddln(output string, d interface{}) {
+	Stdd(output+"\n", d)
+}
+
+// MARK: Debug
+
+// Debugln prints the output followed by a newline.
+func Debugln(output string) {
+	Debugd(output+"\n", nil)
 }
 
 // Debugf prints the formatted output.
 func Debugf(format string, a ...interface{}) {
-	Debugln(fmt.Sprintf(format, a...))
+	Debugd(fmt.Sprintf(format, a...), nil)
 }
 
-// Infoln prints the output.
+// Debugd prints output string and data.
+func Debugd(output string, d interface{}) {
+	LoggerSingleton.printMessage(output, LogLevelDebug, false, d)
+}
+
+// Debugdln prints output string and data followed by a newline.
+func Debugdln(output string, d interface{}) {
+	Debugd(output+"\n", d)
+}
+
+// MARK: Info
+
+// Infoln prints the output followed by a newline.
 func Infoln(output string) {
-	Infod(output, nil)
+	Infod(output+"\n", nil)
 }
 
 // Infof prints the formatted output.
 func Infof(format string, a ...interface{}) {
-	Infoln(fmt.Sprintf(format, a...))
+	Infod(fmt.Sprintf(format, a...), nil)
 }
 
 // Infod prints output string and data.
 func Infod(output string, d interface{}) {
-	buildMessage(output, "INFO", d)
+	LoggerSingleton.printMessage(output, LogLevelInfo, false, d)
 }
 
-// Warnln prints the output.
+// Infodln prints output string and data followed by a newline.
+func Infodln(output string, d interface{}) {
+	Infod(output+"\n", d)
+}
+
+// MARK: Warn
+
+// Warnln prints the output followed by a newline.
 func Warnln(output string) {
-	Warnd(output, nil)
+	Warnd(output+"\n", nil)
 }
 
 // Warnf prints the formatted output.
 func Warnf(format string, a ...interface{}) {
-	Warnln(fmt.Sprintf(format, a...))
+	Warnd(fmt.Sprintf(format, a...), nil)
 }
 
 // Warnd prints output string and data.
 func Warnd(output string, d interface{}) {
-	buildMessage(output, "WARN", d)
+	LoggerSingleton.printMessage(output, LogLevelWarn, false, d)
 }
 
-// Errorln prints the output.
+// Warndln prints output string and data followed by a newline.
+func Warndln(output string, d interface{}) {
+	Warnd(output+"\n", d)
+}
+
+// MARK: Error
+
+// Errorln prints the output followed by a newline.
 func Errorln(output string) {
-	Errord(output, nil)
+	Errord(output+"\n", nil)
 }
 
 // Errorf prints the formatted output.
 func Errorf(format string, a ...interface{}) {
-	Errorln(fmt.Sprintf(format, a...))
+	Errord(fmt.Sprintf(format, a...), nil)
 }
 
 // Errord prints output string and data.
 func Errord(output string, d interface{}) {
-	buildMessage(output, "ERROR", d)
+	LoggerSingleton.printMessage(output, LogLevelError, false, d)
 }
 
-// Fatalln prints the output.
+// Errordln prints output string and data followed by a newline.
+func Errordln(output string, d interface{}) {
+	Errord(output+"\n", d)
+}
+
+// MARK: Fatal
+
+// Fatalln prints the output followed by a newline and calls os.Exit(1).
 func Fatalln(output string) {
-	Fatald(output, nil)
+	Fatald(output+"\n", nil)
 }
 
 // Fatalf prints the formatted output.
 func Fatalf(format string, a ...interface{}) {
-	Fatalln(fmt.Sprintf(format, a...))
+	Fatald(fmt.Sprintf(format, a...), nil)
 }
 
 // Fatald prints output string and data.
 func Fatald(output string, d interface{}) {
-	buildMessage(output, "FATAL", d)
-
+	LoggerSingleton.printMessage(output, LogLevelFatal, true, d)
 }
 
-// MARK: Private
-
-func buildMessage(output string, messageType string, d interface{}) {
-	if LoggerSingleton.Level > LogLevelDebug {
-		return
-	}
-
-	var message *logMessage
-	var prettyMessage string
-
-	time := time.Now()
-	formattedTime := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d-00:00",
-		time.Year(), time.Month(), time.Day(),
-		time.Hour(), time.Minute(), time.Second())
-
-	if LoggerSingleton.format == JSON {
-		if d == nil {
-			// Format message.
-			message = newMessage(formattedTime, messageType, output)
-		} else {
-			// Format message.
-			message = newMessage(formattedTime, messageType, output, d)
-		}
-
-		fmt.Println(message.JSONString())
-	} else {
-		if d == nil {
-			// Format message.
-			prettyMessage = fmt.Sprintf("%v [%s] %s", formattedTime, messageType, output)
-		} else {
-			// Format message.
-			prettyMessage = fmt.Sprintf("%v [%s] %s %+v", formattedTime, messageType, output, d)
-		}
-
-		fmt.Println(prettyMessage)
-	}
-}
-
-func tagList() string {
-	return strings.Join(LoggerSingleton.tags, ",")
-}
-
-func newMessage(timestamp string, level string, message string, data ...interface{}) *logMessage {
-	formatedMessage := &logMessage{
-		Timestamp: timestamp,
-		Level:     level,
-		Message:   message,
-		Metadata:  data,
-	}
-
-	return formatedMessage
-}
-
-// MARK: String methods
-
-func (lm logMessage) JSONString() string {
-	s, _ := json.Marshal(lm)
-	return string(s)
-}
-
-// String string method override.
-func (lm logMessage) String() string {
-	return lm.JSONString()
+// Fataldln prints output string and data.
+func Fataldln(output string, d interface{}) {
+	Fatald(output+"\n", d)
 }
