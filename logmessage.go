@@ -53,12 +53,21 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 		caller = fmt.Sprintf("%s:%d", file, line)
 	}
 
+	// Make sure that error interface types in logMessage.Metadata are not
+	// marshalled as empty JSON objects
+	var metadata interface{}
+	if e, ok := data.(error); ok {
+		if _, ok := e.(json.Marshaler); !ok {
+			metadata = e.Error()
+		}
+	}
+
 	formatedMessage := &logMessage{
 		Timestamp:      time.String(),
 		Level:          level.String(),
 		Tags:           tags,
 		Message:        modifiedMessage,
-		Metadata:       data,
+		Metadata:       metadata,
 		File:           caller,
 		format:         format,
 		rawLevel:       level,
