@@ -35,6 +35,30 @@ func TestInfod(t *testing.T) {
 	Infod("This is some data.", test)
 }
 
+func TestWhitespace(t *testing.T) {
+	type testStruct struct {
+		Name string
+		Kind string
+	}
+	data := &testStruct{
+		Name: "Logan",
+		Kind: "Log",
+	}
+	message := `
+	This is some data.
+`
+
+	t.Run("Pretty", func(t *testing.T) {
+		SetupLocalLogger(LogLevelDebug)
+		Infod(message, data)
+	})
+
+	t.Run("JSON", func(t *testing.T) {
+		SetupCloudLogger(LogLevelDebug, []string{"logger", "test"})
+		Infod(message, data)
+	})
+}
+
 func TestDebugln(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
 	Debugln("This is a debug statement.")
