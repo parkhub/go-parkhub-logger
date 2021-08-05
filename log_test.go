@@ -32,7 +32,7 @@ func TestInfod(t *testing.T) {
 		Kind: "Log",
 	}
 
-	Infodln("This is some data.", test)
+	Infod("This is some data.", test)
 }
 
 func TestDebugln(t *testing.T) {
@@ -42,7 +42,7 @@ func TestDebugln(t *testing.T) {
 
 func TestDebugf(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Debugf("This is a debug statement %d.\n", 10000)
+	Debugf("This is a debug statement %d.", 10000)
 }
 
 func TestInfoln(t *testing.T) {
@@ -52,7 +52,7 @@ func TestInfoln(t *testing.T) {
 
 func TestInfof(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Infof("This is an info statement %d.\n", 10000)
+	Infof("This is an info statement %d.", 10000)
 }
 
 func TestWarnln(t *testing.T) {
@@ -62,7 +62,7 @@ func TestWarnln(t *testing.T) {
 
 func TestWarnf(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Warnf("This is a warning %d.\n", 10000)
+	Warnf("This is a warning %d.", 10000)
 }
 
 func TestErrorln(t *testing.T) {
@@ -72,7 +72,7 @@ func TestErrorln(t *testing.T) {
 
 func TestErrorf(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Errorf("This is an error %d.\n", 10000)
+	Errorf("This is an error %d.", 10000)
 }
 
 func TestFatalln(t *testing.T) {
@@ -82,5 +82,5 @@ func TestFatalln(t *testing.T) {
 
 func TestFatalf(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Fatalf("This is a fatal error %d.\n", 10000)
+	Fatalf("This is a fatal error %d.", 10000)
 }

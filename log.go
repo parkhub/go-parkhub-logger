@@ -5,6 +5,7 @@ package log
 
 import (
 	"fmt"
+	"os"
 )
 
 // LoggerSingleton is the main logging instance.
@@ -61,16 +62,11 @@ func Stdd(output string, d interface{}) {
 	fmt.Printf(fmt.Sprintf("%s %+v", output, d))
 }
 
-// Stddln prints output string and data followed by a newline.
-func Stddln(output string, d interface{}) {
-	Stdd(output+"\n", d)
-}
-
 // MARK: Debug
 
 // Debugln prints the output followed by a newline.
 func Debugln(output string) {
-	Debugd(output+"\n", nil)
+	Debugd(output, nil)
 }
 
 // Debugf prints the formatted output.
@@ -80,19 +76,14 @@ func Debugf(format string, a ...interface{}) {
 
 // Debugd prints output string and data.
 func Debugd(output string, d interface{}) {
-	LoggerSingleton.printMessage(output, LogLevelDebug, false, d)
-}
-
-// Debugdln prints output string and data followed by a newline.
-func Debugdln(output string, d interface{}) {
-	Debugd(output+"\n", d)
+	LoggerSingleton.printMessage(output, LogLevelDebug, d)
 }
 
 // MARK: Info
 
 // Infoln prints the output followed by a newline.
 func Infoln(output string) {
-	Infod(output+"\n", nil)
+	Infod(output, nil)
 }
 
 // Infof prints the formatted output.
@@ -102,19 +93,14 @@ func Infof(format string, a ...interface{}) {
 
 // Infod prints output string and data.
 func Infod(output string, d interface{}) {
-	LoggerSingleton.printMessage(output, LogLevelInfo, false, d)
-}
-
-// Infodln prints output string and data followed by a newline.
-func Infodln(output string, d interface{}) {
-	Infod(output+"\n", d)
+	LoggerSingleton.printMessage(output, LogLevelInfo, d)
 }
 
 // MARK: Warn
 
 // Warnln prints the output followed by a newline.
 func Warnln(output string) {
-	Warnd(output+"\n", nil)
+	Warnd(output, nil)
 }
 
 // Warnf prints the formatted output.
@@ -124,19 +110,14 @@ func Warnf(format string, a ...interface{}) {
 
 // Warnd prints output string and data.
 func Warnd(output string, d interface{}) {
-	LoggerSingleton.printMessage(output, LogLevelWarn, false, d)
-}
-
-// Warndln prints output string and data followed by a newline.
-func Warndln(output string, d interface{}) {
-	Warnd(output+"\n", d)
+	LoggerSingleton.printMessage(output, LogLevelWarn, d)
 }
 
 // MARK: Error
 
 // Errorln prints the output followed by a newline.
 func Errorln(output string) {
-	Errord(output+"\n", nil)
+	Errord(output, nil)
 }
 
 // Errorf prints the formatted output.
@@ -146,19 +127,14 @@ func Errorf(format string, a ...interface{}) {
 
 // Errord prints output string and data.
 func Errord(output string, d interface{}) {
-	LoggerSingleton.printMessage(output, LogLevelError, false, d)
-}
-
-// Errordln prints output string and data followed by a newline.
-func Errordln(output string, d interface{}) {
-	Errord(output+"\n", d)
+	LoggerSingleton.printMessage(output, LogLevelError, d)
 }
 
 // MARK: Fatal
 
 // Fatalln prints the output followed by a newline and calls os.Exit(1).
 func Fatalln(output string) {
-	Fatald(output+"\n", nil)
+	Fatald(output, nil)
 }
 
 // Fatalf prints the formatted output.
@@ -168,10 +144,6 @@ func Fatalf(format string, a ...interface{}) {
 
 // Fatald prints output string and data.
 func Fatald(output string, d interface{}) {
-	LoggerSingleton.printMessage(output, LogLevelFatal, true, d)
-}
-
-// Fataldln prints output string and data.
-func Fataldln(output string, d interface{}) {
-	Fatald(output+"\n", d)
+	LoggerSingleton.printMessage(output, LogLevelFatal, d)
+	os.Exit(1)
 }
