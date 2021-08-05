@@ -62,7 +62,7 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 		}
 	}
 	// If logMessage.Metadata is a slice, convert make the same conversion for any
-	// any errors in the slice
+	// errors in the slice
 	if s, ok := data.([]interface{}); ok {
 		for i, v := range s {
 			if e, ok := v.(error); ok {
