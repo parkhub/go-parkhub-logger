@@ -35,11 +35,6 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 	var trimmedLeft string
 	var trimmedRight string
 
-	// if strings.HasSuffix(message, "\n") {
-	// 	// Strip newline from end of message
-	// 	hasSuffix = true
-	// 	modifiedMessage = message[:len(message)-1]
-	// }
 	left := leftRegexp.FindAllStringSubmatch(message, -1)
 	if len(left) > 0 {
 		trimmedLeft = left[0][0]
@@ -117,21 +112,33 @@ func (m logMessage) String() string {
 		return m.jsonString()
 	}
 
-	prettyMessage := fmt.Sprintf("%s [%s] ", m.Timestamp, m.Level)
+	var timeAndLevel, logCaller, tags, data string
+
+	timeAndLevel = fmt.Sprintf("%s [%s] ", m.Timestamp, m.Level)
 
 	if m.logCaller {
-		prettyMessage += fmt.Sprintf("[%s] ", m.File)
+		logCaller = fmt.Sprintf("[%s] ", m.File)
 	}
 
 	if len(m.Tags) > 0 {
-		prettyMessage += fmt.Sprintf("(%s) ", strings.Join(m.Tags, ","))
+		tags = fmt.Sprintf("(%s) ", strings.Join(m.Tags, ","))
 	}
-
-	prettyMessage += m.trimmedLeft + m.Message
 
 	if m.Metadata != nil {
-		prettyMessage += fmt.Sprintf(" %#v%s", m.Metadata, m.trimmedRight)
+		switch m.Metadata.(type) {
+		case string:
+			data = m.Metadata.(string)
+		case fmt.Stringer:
+			data = m.Metadata.(fmt.Stringer).String()
+		case error:
+			data = m.Metadata.(error).Error()
+		default:
+			data = fmt.Sprintf("%#v", m.Metadata)
+		}
 	}
+
+	prettyMessage := timeAndLevel + logCaller + tags +
+		m.trimmedLeft + m.Message + data + m.trimmedRight
 
 	return m.colorizeIfNeeded(prettyMessage)
 }

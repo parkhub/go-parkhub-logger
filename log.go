@@ -59,25 +59,43 @@ func Stdf(format string, a ...interface{}) {
 
 // Stdd prints output string and data.
 func Stdd(output string, d interface{}) {
-	fmt.Printf(fmt.Sprintf("%s %+v", output, d))
+	fmt.Printf("%s %+v", output, d)
+}
+
+
+// MARK: Generic Log
+// Logln prints the output followed by a newline
+func Logln(level Level, output string) {
+	Logd(level, output, nil)
+}
+
+// Logf prints the formatted output
+func Logf(level Level, format string, a ...interface{}) {
+	Logd(level, fmt.Sprintf(format, a...), nil)
+}
+
+// Logd prints output string and data
+func Logd(level Level, output string, d interface{}) {
+	LoggerSingleton.printMessage(output, level, d)
 }
 
 // MARK: Debug
 
 // Debugln prints the output followed by a newline.
 func Debugln(output string) {
-	Debugd(output, nil)
+	Logln(LogLevelDebug, output)
 }
 
 // Debugf prints the formatted output.
 func Debugf(format string, a ...interface{}) {
-	Debugd(fmt.Sprintf(format, a...), nil)
+	Logf(LogLevelDebug, format, a...)
 }
 
 // Debugd prints output string and data.
 func Debugd(output string, d interface{}) {
-	LoggerSingleton.printMessage(output, LogLevelDebug, d)
+	Logd(LogLevelDebug, output, d)
 }
+
 
 // MARK: Info
 
@@ -96,6 +114,7 @@ func Infod(output string, d interface{}) {
 	LoggerSingleton.printMessage(output, LogLevelInfo, d)
 }
 
+
 // MARK: Warn
 
 // Warnln prints the output followed by a newline.
@@ -112,6 +131,7 @@ func Warnf(format string, a ...interface{}) {
 func Warnd(output string, d interface{}) {
 	LoggerSingleton.printMessage(output, LogLevelWarn, d)
 }
+
 
 // MARK: Error
 
@@ -130,6 +150,7 @@ func Errord(output string, d interface{}) {
 	LoggerSingleton.printMessage(output, LogLevelError, d)
 }
 
+
 // MARK: Fatal
 
 // Fatalln prints the output followed by a newline and calls os.Exit(1).
@@ -146,4 +167,20 @@ func Fatalf(format string, a ...interface{}) {
 func Fatald(output string, d interface{}) {
 	LoggerSingleton.printMessage(output, LogLevelFatal, d)
 	os.Exit(1)
+}
+
+// MARK: Private Functions
+
+func joinToString(a ...interface{}) string {
+	l := len(a)
+	if l == 0 {
+		return ""
+	}
+	format := "%v"
+	if l > 1 {
+		for i := 1; i < l; i++ {
+			format += " %v"
+		}
+	}
+	return fmt.Sprintf(format, a...)
 }
