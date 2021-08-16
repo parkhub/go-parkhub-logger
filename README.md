@@ -159,3 +159,68 @@ func main() {
 	log.Fatalf("This is an error %d.\n", 10000)
 }
 ```
+
+## Request Logging
+
+The package also includes a `RequestLogger` type that provides an `http.Handler`
+by its `Handle` method. The handler logs all incoming HTTP requests, logging
+the request method, the requested path, the time it took to complete the
+request, and whether the request was canceled, timed out, or had another context
+error.
+
+| Request Status    | Log Level |
+|-------------------|-----------|
+| Canceled          | Warn      |
+| Deadline exceeded | Warn      |
+| Other error       | Error     |
+| Success           | Debug     |
+
+### Example
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/gorilla/mux"
+	log "github.com/parkhub/go-parkhub-logger"
+)
+
+func main() {
+	log.SetupLogger(
+		log.LogLevelDebug,
+		log.LogFormatPretty,
+		false,
+		false,
+		[]string{"some-api", "develop"},
+	)
+
+	rl := log.NewRequestLogger(log.RequestLoggerConfig{
+		Headers: false,
+		Params:  true,
+		Body:    false,
+	})
+
+	router := mux.NewRouter()
+
+	// log all incoming requests as middleware
+	router.Use(rl.Handle)
+
+	// alternately, log all incoming requests on single route
+	routeHandler := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		// some route handler
+	})
+	router.Handle("/some-route", rl.Handle(routeHandler))
+
+	// etc. ...
+
+	srv := &http.Server{
+		Handler:      router,
+		Addr:         ":8080",
+		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  5 * time.Second,
+	}
+	_ = srv.ListenAndServe()
+}
+```
