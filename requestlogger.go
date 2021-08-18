@@ -103,7 +103,6 @@ func (rl requestLog) String() string {
 		paramStr = "\nParams: " + strings.Join(params, "; ")
 	}
 
-
 	// format requestBody
 	if rl.body != "" {
 		bodyStr = "\nBody: " + rl.body

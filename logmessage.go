@@ -83,12 +83,12 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 		}
 	}
 
-	formatedMessage := &logMessage{
+	formattedMessage := &logMessage{
 		Timestamp:    time.String(),
 		Level:        level.String(),
 		Tags:         tags,
 		Message:      modifiedMessage,
-		Metadata:     data,
+		Metadata:     metadata,
 		File:         caller,
 		format:       format,
 		rawLevel:     level,
@@ -98,7 +98,7 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 		trimmedRight: trimmedRight,
 	}
 
-	return formatedMessage
+	return formattedMessage
 }
 
 // MARK: Methods
