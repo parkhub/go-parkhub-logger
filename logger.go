@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"os"
 	"time"
 )
 
@@ -18,7 +17,7 @@ type logger struct {
 
 // printMessage prints the message with the given output, level and data. If
 // fatal is true, then os.Exit(1) is called after the log has been printed.
-func (l logger) printMessage(output string, level Level, fatal bool, d interface{}) {
+func (l logger) printMessage(output string, level Level, d interface{}) {
 	if l.level > level {
 		return
 	}
@@ -33,10 +32,6 @@ func (l logger) printMessage(output string, level Level, fatal bool, d interface
 			l.tags,
 			output,
 			d,
-		).String(),
+		).String()+"\n",
 	)
-
-	if fatal {
-		os.Exit(1)
-	}
 }
