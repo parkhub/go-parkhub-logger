@@ -33,6 +33,7 @@ func SetupLogger(level Level, format Format, colorizeOutput bool, logCaller bool
 		LoggerSingleton.format = format
 		LoggerSingleton.colorizeOutput = colorizeOutput
 		LoggerSingleton.tags = tags
+		return
 	}
 
 	// Setup logger with options.
