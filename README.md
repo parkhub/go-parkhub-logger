@@ -5,6 +5,7 @@ This package provides a singular interface to create logs as well as filtering t
 ## Features
 
 The logger mimics the `log` package's `Println`, `Printf`, `Fatalln` and `Fatalf` functions with some extra features.
+Like the `log` package, all log functions will end with a new line.
 
 	- [X] Log levels
 	- [X] JSON formatted output
@@ -66,7 +67,7 @@ SetupLogger(LogLevelDebug, LogFormatPretty, false, true, []string{"live", "analy
 
 ## Printing Data
 
-Along with the usual "ln" and "f" print functions, the logger includes functions for attaching data to a log using the `Debugd`, `Infod`, etc. and `Debugdln`, `Infodln`, etc. functions.
+Along with the usual "ln" and "f" print functions, the logger includes functions for attaching data to a log using the `Debugd`, `Infod`, etc. functions.
 
 The following:
 
@@ -81,19 +82,14 @@ test := &testStruct{
 	Kind: "Log",
 }
 
-log.Warnd("Unable to consume object data.\n", test)
-// Or
-log.Warndln("Unable to consume object data.", test)
+log.Warnd("Unable to consume object data.", test)
 ```
 
 Produces the output:
 
 ```bash
 2021-02-27T18:08:48-74:94 [WARN] Unable to consume object data. &{Name:Logan Kind:Log}
-2021-02-27T18:08:48-74:94 [WARN] Unable to consume object data. &{Name:Logan Kind:Log}
 ```
-
-The `Debugd`, `Infod`, `Warnd`, etc. functions handle trailing newlines in the output log by moving the newline to the end of the log _after_ the data's formatted output.
 
 ## Example
 
@@ -132,30 +128,30 @@ func main() {
 	log.Debugln("This is a debug statement.")
 
 	// Print debug text with additional data.
-	log.Debugf("This is a debug statement %d.\n", 10000)
+	log.Debugf("This is a debug statement %d.", 10000)
 
 	// Print info text
 	log.Infoln("This is an info statement.")
 
 	// Print info text with additional data.
-	log.Infof("This is an info statement %d.\n", 10000)
+	log.Infof("This is an info statement %d.", 10000)
 
 	// Print warn text
 	log.Warnln("This is a warning.")
 
 	// Print warn text with additional data.
-	log.Warnf("This is a warning %d.\n", 10000)
+	log.Warnf("This is a warning %d.", 10000)
 
 	// Print error text
 	log.Errorln("This is an error.")
 
 	// Print error text with additional data.
-	log.Errorf("This is an error %d.\n", 10000)
+	log.Errorf("This is an error %d.", 10000)
 
 	// Print fatal text
 	log.Fatalln("This is an error.")
 
 	// Print fatal text with additional data.
-	log.Fatalf("This is an error %d.\n", 10000)
+	log.Fatalf("This is an error %d.", 10000)
 }
 ```

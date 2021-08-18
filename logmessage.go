@@ -3,11 +3,15 @@ package log
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"runtime"
 	"strings"
 
 	"github.com/ttacon/chalk"
 )
+
+var leftRegexp = regexp.MustCompile(`^(\s)+`)
+var rightRegexp = regexp.MustCompile(`(\s)+$`)
 
 type logMessage struct {
 	Timestamp string      `json:"timestamp"`
@@ -17,23 +21,29 @@ type logMessage struct {
 	Metadata  interface{} `json:"metadata,omitempty"`
 	File      string      `json:"file,omitempty"`
 
-	format         Format `json:"-"`
-	rawLevel       Level  `json:"-"`
-	colorize       bool   `json:"-"`
-	logCaller      bool   `json:"-"`
-	trimmedNewline bool   `json:"-"`
+	format       Format `json:"-"`
+	rawLevel     Level  `json:"-"`
+	colorize     bool   `json:"-"`
+	logCaller    bool   `json:"-"`
+	trimmedLeft  string `json:"-"`
+	trimmedRight string `json:"-"`
 }
 
 // newLogMessage creates a new log message.
 func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, level Level, tags []string, message string, data interface{}) *logMessage {
 	modifiedMessage := message
-	hasSuffix := false
+	var trimmedLeft string
+	var trimmedRight string
 
-	if strings.HasSuffix(message, "\n") {
-		// Strip newline from end of message
-		hasSuffix = true
-		modifiedMessage = message[:len(message)-1]
+	left := leftRegexp.FindAllStringSubmatch(message, -1)
+	if len(left) > 0 {
+		trimmedLeft = left[0][0]
 	}
+	right := rightRegexp.FindAllStringSubmatch(message, -1)
+	if len(right) > 0 {
+		trimmedRight = right[0][0]
+	}
+	modifiedMessage = strings.TrimSpace(message)
 
 	caller := ""
 	if logCaller {
@@ -74,17 +84,18 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 	}
 
 	formatedMessage := &logMessage{
-		Timestamp:      time.String(),
-		Level:          level.String(),
-		Tags:           tags,
-		Message:        modifiedMessage,
-		Metadata:       metadata,
-		File:           caller,
-		format:         format,
-		rawLevel:       level,
-		colorize:       colorize,
-		logCaller:      logCaller,
-		trimmedNewline: hasSuffix,
+		Timestamp:    time.String(),
+		Level:        level.String(),
+		Tags:         tags,
+		Message:      modifiedMessage,
+		Metadata:     data,
+		File:         caller,
+		format:       format,
+		rawLevel:     level,
+		colorize:     colorize,
+		logCaller:    logCaller,
+		trimmedLeft:  trimmedLeft,
+		trimmedRight: trimmedRight,
 	}
 
 	return formatedMessage
@@ -92,13 +103,8 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 
 // MARK: Methods
 
-func (m logMessage) restoreNewline(output string) string {
-	tail := ""
-	if m.trimmedNewline {
-		tail = "\n"
-	}
-
-	return output + tail
+func (m logMessage) restoreWhitespace(output string) string {
+	return m.trimmedLeft + output + m.trimmedRight
 }
 
 func (m logMessage) colorizeIfNeeded(output string) string {
@@ -106,12 +112,17 @@ func (m logMessage) colorizeIfNeeded(output string) string {
 		return output
 	}
 
-	return fmt.Sprintf("%s%s%s", m.rawLevel.color(), output, chalk.ResetColor)
+	lines := strings.Split(output, "\n")
+	for i, line := range lines {
+		lines[i] = fmt.Sprintf("%s%s%s", m.rawLevel.color(), line, chalk.ResetColor)
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 func (m logMessage) jsonString() string {
 	s, _ := json.Marshal(m)
-	return m.restoreNewline(m.colorizeIfNeeded(string(s)))
+	return m.colorizeIfNeeded(string(s))
 }
 
 // MARK: String interface methods
@@ -121,21 +132,33 @@ func (m logMessage) String() string {
 		return m.jsonString()
 	}
 
-	prettyMessage := fmt.Sprintf("%s [%s] ", m.Timestamp, m.Level)
+	var timeAndLevel, logCaller, tags, data string
+
+	timeAndLevel = fmt.Sprintf("%s [%s] ", m.Timestamp, m.Level)
 
 	if m.logCaller {
-		prettyMessage += fmt.Sprintf("[%s] ", m.File)
+		logCaller = fmt.Sprintf("[%s] ", m.File)
 	}
 
 	if len(m.Tags) > 0 {
-		prettyMessage += fmt.Sprintf("(%s) ", strings.Join(m.Tags, ","))
+		tags = fmt.Sprintf("(%s) ", strings.Join(m.Tags, ","))
 	}
-
-	prettyMessage += m.Message
 
 	if m.Metadata != nil {
-		prettyMessage += fmt.Sprintf(" %+v", m.Metadata)
+		switch m.Metadata.(type) {
+		case string:
+			data = m.Metadata.(string)
+		case fmt.Stringer:
+			data = m.Metadata.(fmt.Stringer).String()
+		case error:
+			data = m.Metadata.(error).Error()
+		default:
+			data = fmt.Sprintf("%#v", m.Metadata)
+		}
 	}
 
-	return m.restoreNewline(m.colorizeIfNeeded(prettyMessage))
+	prettyMessage := timeAndLevel + logCaller + tags +
+		m.trimmedLeft + m.Message + data + m.trimmedRight
+
+	return m.colorizeIfNeeded(prettyMessage)
 }
