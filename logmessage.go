@@ -65,7 +65,7 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 
 	// Make sure that error interface types in logMessage.Metadata are not
 	// marshalled as empty JSON objects
-	var metadata interface{}
+	metadata := data
 	if e, ok := data.(error); ok {
 		if _, ok := e.(json.Marshaler); !ok {
 			metadata = e.Error()
@@ -158,7 +158,7 @@ func (m logMessage) String() string {
 	}
 
 	prettyMessage := timeAndLevel + logCaller + tags +
-		m.trimmedLeft + m.Message + data + m.trimmedRight
+		m.trimmedLeft + m.Message + " " + data + m.trimmedRight
 
 	return m.colorizeIfNeeded(prettyMessage)
 }
