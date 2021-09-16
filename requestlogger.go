@@ -54,12 +54,13 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 
 		start := time.Now().UTC()
 		next.ServeHTTP(w, r)
-		end := time.Now().UTC()
 
-		log.latency = end.Sub(start) / 1000000
-		log.contextError = r.Context().Err()
-
-		log.log()
+		defer func() {
+			end := time.Now().UTC()
+			log.latency = end.Sub(start) / 1000000
+			log.contextError = r.Context().Err()
+			log.log()
+		}()
 	})
 }
 
