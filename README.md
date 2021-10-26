@@ -220,3 +220,23 @@ func main() {
 	_ = srv.ListenAndServe()
 }
 ```
+
+## Panic Recovery
+
+The `Recover` function can be deferred in code to recover from a panic and log
+it as an error instead, and continue.
+
+### Example
+
+```shell
+// exampleFunction will panic if index is greater than the length of slice - 1
+func exampleFunction(index int, slice []interface{}) interface{} {
+  return slice[index]
+}
+
+// goroutine returns no error, but calls a function that may panic
+func goroutine() {
+  defer Recover("goroutine")
+  _ = exampleFunction(1, nil)
+}
+```
