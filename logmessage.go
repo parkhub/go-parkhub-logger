@@ -3,15 +3,12 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"runtime"
 	"strings"
+	"unicode"
 
 	"github.com/ttacon/chalk"
 )
-
-var leftRegexp = regexp.MustCompile(`^(\s)+`)
-var rightRegexp = regexp.MustCompile(`(\s)+$`)
 
 type logMessage struct {
 	Timestamp string      `json:"timestamp"`
@@ -21,29 +18,19 @@ type logMessage struct {
 	Metadata  interface{} `json:"metadata,omitempty"`
 	File      string      `json:"file,omitempty"`
 
-	format       Format `json:"-"`
-	rawLevel     Level  `json:"-"`
-	colorize     bool   `json:"-"`
-	logCaller    bool   `json:"-"`
-	trimmedLeft  string `json:"-"`
-	trimmedRight string `json:"-"`
+	format       Format
+	rawLevel     Level
+	colorize     bool
+	logCaller    bool
+	trimmedLeft  string
+	trimmedRight string
 }
 
 // newLogMessage creates a new log message.
 func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, level Level, tags []string, message string, data interface{}) *logMessage {
-	modifiedMessage := message
-	var trimmedLeft string
-	var trimmedRight string
-
-	left := leftRegexp.FindAllStringSubmatch(message, -1)
-	if len(left) > 0 {
-		trimmedLeft = left[0][0]
-	}
-	right := rightRegexp.FindAllStringSubmatch(message, -1)
-	if len(right) > 0 {
-		trimmedRight = right[0][0]
-	}
-	modifiedMessage = strings.TrimSpace(message)
+	trimmedLeft := leadingWhitespace(message)
+	trimmedRight := trailingWhitespace(message)
+	modifiedMessage := strings.TrimSpace(message)
 
 	caller := ""
 	if logCaller {
@@ -161,4 +148,39 @@ func (m logMessage) String() string {
 		m.trimmedLeft + m.Message + " " + data + m.trimmedRight
 
 	return m.colorizeIfNeeded(prettyMessage)
+}
+
+// MARK: Helper Functions
+
+// return the leading whitespace of the input string
+func leadingWhitespace(s string) string {
+	var b strings.Builder
+	for i, _ := range s {
+		if !unicode.IsSpace(rune(s[i])) {
+			return b.String()
+		}
+		b.Write([]byte{s[i]})
+	}
+	return b.String()
+}
+
+// return the trailing whitespace of the input string
+func trailingWhitespace(s string) string {
+	var rev strings.Builder
+	for i := len(s); i > 0; i-- {
+		if !unicode.IsSpace(rune(s[i-1])) {
+			return reverseString(rev.String())
+		}
+		rev.Write([]byte{s[i-1]})
+	}
+	return rev.String()
+}
+
+// reverse a string
+func reverseString(s string) string {
+	r := []rune(s)
+	for i, j := 0, 0; i < j; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
+	return string(r)
 }
