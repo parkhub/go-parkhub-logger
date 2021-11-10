@@ -6,20 +6,23 @@ import "github.com/ttacon/chalk"
 type Level int
 
 const (
+	// LogLevelTrace trace log level
+	LogLevelTrace Level = iota
+
 	// LogLevelDebug debug log level.
-	LogLevelDebug Level = 0
+	LogLevelDebug
 
 	// LogLevelInfo info log level.
-	LogLevelInfo Level = 1
+	LogLevelInfo
 
 	// LogLevelWarn warn log level.
-	LogLevelWarn Level = 2
+	LogLevelWarn
 
 	// LogLevelError error log level.
-	LogLevelError Level = 3
+	LogLevelError
 
 	// LogLevelFatal fatal log level.
-	LogLevelFatal Level = 4
+	LogLevelFatal
 )
 
 // MARK: Methods
@@ -43,6 +46,8 @@ func (l Level) color() chalk.Color {
 
 func (l Level) String() string {
 	switch l {
+	case LogLevelTrace:
+		return "TRACE"
 	case LogLevelDebug:
 		return "DEBUG"
 	case LogLevelInfo:
