@@ -171,6 +171,38 @@ granular tags that apply only to a package or a function, the `Sublogger`
 function returns a `Logger` that will include additional tags where it is used
 instead of the default logger. It does not affect the default logger.
 
+### Example
+
+```go
+package main
+
+import (
+    log "github.com/parkhub/go-parkhub-logger"
+)
+
+func main() {
+    log.SetupCloudLogger(log.LogLevelInfo, []string{"environment", "platform", "application"})
+    
+    sl := log.Sublogger("package", "function")
+    
+    log.Debugln("with default logger")
+    // tagged ["environment", "platform", "application"]
+    
+    sl.Debugln("with sub-logger")
+    // tagged ["environment", "platform", "application", "package", "function"]
+}
+
+```
+
+
+## Sub-Loggers
+
+The tags provided when setting up the logger will be included in every log
+statement, and so should apply to the entire application instance. For more
+granular tags that apply only to a package or a function, the `Sublogger`
+function returns a `Logger` that will include additional tags where it is used
+instead of the default logger. It does not affect the default logger.
+
 The `Sublogger` function creates a logger from the default Logger, but a
 sub-logger can be created from any Logger, even a sub-logger, and will inherit
 all of its tags.
