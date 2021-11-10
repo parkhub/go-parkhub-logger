@@ -63,21 +63,38 @@ func Stdd(output string, d interface{}) {
 	fmt.Printf("%s %+v", output, d)
 }
 
-
 // MARK: Generic Log
+
 // Logln prints the output followed by a newline
 func Logln(level Level, output string) {
-	Logd(level, output, nil)
+	LoggerSingleton.logln(level, output)
 }
 
 // Logf prints the formatted output
 func Logf(level Level, format string, a ...interface{}) {
-	Logd(level, fmt.Sprintf(format, a...), nil)
+	LoggerSingleton.logf(level, format, a...)
 }
 
 // Logd prints output string and data
 func Logd(level Level, output string, d interface{}) {
-	LoggerSingleton.printMessage(output, level, d)
+	LoggerSingleton.logd(level, output, d)
+}
+
+// MARK: Trace
+
+// Traceln prints the output followed by a newline
+func Traceln(output string) {
+	Logln(LogLevelTrace, output)
+}
+
+// Tracef prints the formatted output
+func Tracef(format string, a ...interface{}) {
+	Logf(LogLevelTrace, format, a...)
+}
+
+// Traced prints the output string and data
+func Traced(output string, d interface{}) {
+	Logd(LogLevelTrace, output, d)
 }
 
 // MARK: Debug
