@@ -224,7 +224,8 @@ func main() {
 ## Panic Recovery
 
 The `Recover` function can be deferred in code to recover from a panic and log
-it as an error instead, and continue.
+it as an error instead, and continue. If an error reference is provided, it can
+be used to capture the panic as an error to return.
 
 ### Example
 
@@ -236,7 +237,13 @@ func exampleFunction(index int, slice []interface{}) interface{} {
 
 // goroutine returns no error, but calls a function that may panic
 func goroutine() {
-  defer Recover("goroutine")
+  defer Recover("goroutine", nil)
   _ = exampleFunction(1, nil)
+}
+
+// goroutine2 returns an error set if function recovers from a panic
+func goroutine2() (err error) {
+  defer Recover("goroutine2", &err)
+  panic("fatal error!")
 }
 ```
