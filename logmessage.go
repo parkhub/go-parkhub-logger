@@ -26,7 +26,7 @@ type logMessage struct {
 	trimmedRight string
 }
 
-// newLogMessage creates a new log message.
+// newLogMessage creates a new logMessage.
 func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, level Level, tags []string, message string, data interface{}) *logMessage {
 	trimmedLeft := leadingWhitespace(message)
 	trimmedRight := trailingWhitespace(message)

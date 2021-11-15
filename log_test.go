@@ -59,52 +59,98 @@ func TestWhitespace(t *testing.T) {
 	})
 }
 
-func TestDebugln(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Debugln("This is a debug statement.")
+func TestTrace(t *testing.T) {
+	SetupLogger(LogLevelTrace, LogFormatJSON, false, true, []string{"test", "tags"})
+
+	t.Run("Traceln", func(t *testing.T) {
+		Traceln("This is a trace ln statement.")
+	})
+
+	t.Run("Tracef", func(t *testing.T) {
+		Tracef("This is a trace f statement %d.", 10000)
+	})
+
+	t.Run("Traced", func(t *testing.T) {
+		Traced("This is a trace d statement.", 10000)
+	})
 }
 
-func TestDebugf(t *testing.T) {
+func TestDebug(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Debugf("This is a debug statement %d.", 10000)
+
+	t.Run("Debugln", func(t *testing.T) {
+		Debugln("This is a debug ln statement.")
+	})
+
+	t.Run("Debugf", func(t *testing.T) {
+		Debugf("This is a debug f statement %d.", 10000)
+	})
+
+	t.Run("Debugd", func(t *testing.T) {
+		Debugd("This is a debug d statement.", 10000)
+	})
 }
 
-func TestInfoln(t *testing.T) {
+func TestInfo(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Infoln("This is an info statement.")
+
+	t.Run("Infoln", func(t *testing.T) {
+		Infoln("This is an info ln statement.")
+	})
+
+	t.Run("Infof", func(t *testing.T) {
+		Infof("This is an info f statement %d.", 10000)
+	})
+
+	t.Run("Infod", func(t *testing.T) {
+		Infod("This is an info f statement.", 10000)
+	})
 }
 
-func TestInfof(t *testing.T) {
+func TestWarn(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Infof("This is an info statement %d.", 10000)
+
+	t.Run("Warnln", func(t *testing.T) {
+		Warnln("This is a warning ln.")
+	})
+
+	t.Run("Warnf", func(t *testing.T) {
+		Warnf("This is a warning f %d.", 10000)
+	})
+
+	t.Run("Warnd", func(t *testing.T) {
+		Warnd("This is a warning d.", 10000)
+	})
 }
 
-func TestWarnln(t *testing.T) {
+func TestError(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Warnln("This is a warning.")
+
+	t.Run("Errorln", func(t *testing.T) {
+		Errorln("This is an error ln.")
+	})
+
+	t.Run("Errorf", func(t *testing.T) {
+		Errorf("This is an error f %d.", 10000)
+	})
+
+	t.Run("Errord", func(t *testing.T) {
+		Errord("This is an error d.", 10000)
+	})
 }
 
-func TestWarnf(t *testing.T) {
+func TestFatal(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Warnf("This is a warning %d.", 10000)
-}
 
-func TestErrorln(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Errorln("This is an error.")
-}
+	t.Run("Fatalln", func(t *testing.T) {
+		Fatalln("This is a fatal ln.")
+	})
 
-func TestErrorf(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Errorf("This is an error %d.", 10000)
-}
+	t.Run("Fatalf", func(t *testing.T) {
+		Fatalf("This is a fatal f %d.", 10000)
+	})
 
-func TestFatalln(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Fatalln("This is fatal error.")
-}
-
-func TestFatalf(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	Fatalf("This is a fatal error %d.", 10000)
+	t.Run("Fatald", func(t *testing.T) {
+		Fatald("This is a fatal d.", 10000)
+	})
 }
