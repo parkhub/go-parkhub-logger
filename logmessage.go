@@ -95,7 +95,7 @@ func (m logMessage) restoreWhitespace(output string) string {
 }
 
 func (m logMessage) colorizeIfNeeded(output string) string {
-	if !m.colorize || m.rawLevel == LogLevelDebug {
+	if !m.colorize {
 		return output
 	}
 
