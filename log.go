@@ -29,7 +29,7 @@ func SetupCloudLogger(level Level, tags []string) {
 func SetupLogger(level Level, format Format, colorizeOutput bool, logCaller bool, tags []string) {
 	if LoggerSingleton != nil {
 		// If the logger has already been created, then update its properties
-		LoggerSingleton.level = level
+		LoggerSingleton.rawLevel = level
 		LoggerSingleton.format = format
 		LoggerSingleton.colorizeOutput = colorizeOutput
 		LoggerSingleton.tags = tags
@@ -38,7 +38,7 @@ func SetupLogger(level Level, format Format, colorizeOutput bool, logCaller bool
 
 	// Setup logger with options.
 	LoggerSingleton = &logger{
-		level:          level,
+		rawLevel:       level,
 		format:         format,
 		colorizeOutput: colorizeOutput,
 		logCaller:      logCaller,
@@ -114,7 +114,6 @@ func Debugd(output string, d interface{}) {
 	Logd(LogLevelDebug, output, d)
 }
 
-
 // MARK: Info
 
 // Infoln prints the output followed by a newline.
@@ -131,7 +130,6 @@ func Infof(format string, a ...interface{}) {
 func Infod(output string, d interface{}) {
 	LoggerSingleton.printMessage(output, LogLevelInfo, d)
 }
-
 
 // MARK: Warn
 
@@ -150,7 +148,6 @@ func Warnd(output string, d interface{}) {
 	LoggerSingleton.printMessage(output, LogLevelWarn, d)
 }
 
-
 // MARK: Error
 
 // Errorln prints the output followed by a newline.
@@ -167,7 +164,6 @@ func Errorf(format string, a ...interface{}) {
 func Errord(output string, d interface{}) {
 	LoggerSingleton.printMessage(output, LogLevelError, d)
 }
-
 
 // MARK: Fatal
 

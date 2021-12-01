@@ -140,6 +140,7 @@ func TestError(t *testing.T) {
 }
 
 func TestFatal(t *testing.T) {
+	t.Skip("Skipping Fatal functions because they exit")
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
 
 	t.Run("Fatalln", func(t *testing.T) {

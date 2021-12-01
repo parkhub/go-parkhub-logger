@@ -38,17 +38,37 @@ type Logger interface {
 	Fatalln(string)
 	Fatalf(string, ...interface{})
 	Fatald(string, interface{})
+
+	Sublogger(tags...string) Logger
+	newLogMessage(string, Level, interface{}) *logMessage
+	level() Level
 }
 
+// logger is the basic Logger implementation
 type logger struct {
-	level          Level
+	rawLevel       Level
 	format         Format
 	tags           []string
 	colorizeOutput bool
 	logCaller      bool
 }
 
-// MARK: Private methods
+// MARK: Public Methods
+
+// Sublogger returns a new sublogger on the logger with the provided tags
+func (l logger) Sublogger(tags ...string) Logger {
+	return sublogger{
+		Logger:  &l,
+		subTags: tags,
+	}
+}
+
+// MARK: Private Methods
+
+// level returns the Logger's Level
+func (l logger) level() Level {
+	return l.rawLevel
+}
 
 // newLogMessage creates a new logMessage
 func (l logger) newLogMessage(output string, level Level, d interface{}) *logMessage {
@@ -67,7 +87,7 @@ func (l logger) newLogMessage(output string, level Level, d interface{}) *logMes
 // printMessage prints the message with the given output, level and data. If
 // fatal is true, then os.Exit(1) is called after the log has been printed.
 func (l logger) printMessage(output string, level Level, d interface{}) {
-	if l.level > level {
+	if l.rawLevel > level {
 		return
 	}
 

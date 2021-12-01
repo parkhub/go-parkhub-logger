@@ -9,7 +9,7 @@ import (
 
 // sublogger allows for logging with additional tags
 type sublogger struct {
-	*logger
+	Logger
 	subTags []string
 }
 
@@ -18,7 +18,15 @@ type sublogger struct {
 // Sublogger returns a new sublogger with the provided tags
 func Sublogger(tags ...string) Logger {
 	return sublogger{
-		logger:  LoggerSingleton,
+		Logger:  LoggerSingleton,
+		subTags: tags,
+	}
+}
+
+// Sublogger returns a new sublogger with the provided tags
+func (sl sublogger) Sublogger(tags ...string) Logger {
+	return sublogger{
+		Logger:  &sl,
 		subTags: tags,
 	}
 }
@@ -130,20 +138,25 @@ func (sl sublogger) Fatald(message string, d interface{}) {
 
 // MARK: Private Methods
 
+// level returns the logger's Level
+// func (sl sublogger) level() Level {
+// 	return sl.Logger.level()
+// }
+
 // newLogMessage creates a new *logMessage
 func (sl sublogger) newLogMessage(output string, level Level, d interface{}) *logMessage {
-	m := sl.logger.newLogMessage(output, level, d)
+	m := sl.Logger.newLogMessage(output, level, d)
 	m.Tags = append(m.Tags, sl.subTags...)
 	return m
 }
 
 // printMessage prints a logMessage to stdout
 func (sl sublogger) printMessage(output string, level Level, d interface{}) {
-	if sl.level > level {
+	if sl.level() > level {
 		return
 	}
 
-	fmt.Printf(sl.newLogMessage(output, level, d).String()+"\n")
+	fmt.Printf(sl.newLogMessage(output, level, d).String() + "\n")
 }
 
 // MARK: base log methods

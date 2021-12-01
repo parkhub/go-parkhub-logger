@@ -10,7 +10,10 @@ func TestSublogger(t *testing.T) {
 		false,
 		[]string{"Environment", "Platform", "Application"},
 	)
+
 	sl := Sublogger("Function")
+	sl2 := sl.Sublogger("Sub-Function")
 	Debugln("Singleton Logger")
 	sl.Debugln("sublogger")
+	sl2.Debugln("sub-sub-logger")
 }
