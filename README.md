@@ -171,6 +171,10 @@ granular tags that apply only to a package or a function, the `Sublogger`
 function returns a `Logger` that will include additional tags where it is used
 instead of the default logger. It does not affect the default logger.
 
+The `Sublogger` function creates a logger from the default Logger, but a
+sub-logger can be created from any Logger, even a sub-logger, and will inherit
+all of its tags.
+
 ### Example
 
 ```go
@@ -190,6 +194,10 @@ func main() {
     
     sl.Debugln("with sub-logger")
     // tagged ["environment", "platform", "application", "package", "function"]
+    
+    sl2 := sl.Sublogger("super-fine")
+    sl2.Debugln("with sub-sub-logger")
+	// tagged ["environment", "platform", "application", "package", "function", "super-fine"]
 }
 
 ```

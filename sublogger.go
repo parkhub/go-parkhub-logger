@@ -18,8 +18,9 @@ type sublogger struct {
 // Sublogger returns a new sublogger with the provided tags
 func Sublogger(tags ...string) Logger {
 	return &sublogger{
-		Logger:  LoggerSingleton,
-		subTags: tags,
+		Logger:     LoggerSingleton,
+		subTags:    tags,
+		skipOffset: 0,
 	}
 }
 
@@ -159,11 +160,6 @@ func (sl *sublogger) Fatald(message string, d interface{}) {
 }
 
 // MARK: Private Methods
-
-// level returns the logger's Level
-// func (sl sublogger) level() Level {
-// 	return sl.Logger.level()
-// }
 
 // newLogMessage creates a new *logMessage
 func (sl *sublogger) newLogMessage(output string, level Level, skipOffset int, d interface{}) *logMessage {
