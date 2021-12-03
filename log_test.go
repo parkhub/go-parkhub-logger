@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -29,7 +30,7 @@ func TestInfod(t *testing.T) {
 
 	test := &testStruct{
 		Name: "Logan",
-		Kind: "Log",
+		Kind: "log",
 	}
 
 	Infod("This is some data.", test)
@@ -42,7 +43,7 @@ func TestWhitespace(t *testing.T) {
 	}
 	data := &testStruct{
 		Name: "Logan",
-		Kind: "Log",
+		Kind: "log",
 	}
 	message := `
 	This is some data.
@@ -57,6 +58,26 @@ func TestWhitespace(t *testing.T) {
 		SetupCloudLogger(LogLevelDebug, []string{"logger", "test"})
 		Infod(message, data)
 	})
+}
+
+func TestColor(t *testing.T) {
+	LoggerSingleton = &logger{
+		rawLevel:       LogLevelTrace,
+		format:         LogFormatPretty,
+		tags:           []string{"Environment", "Platform", "Application"},
+		colorizeOutput: true,
+		logCaller:      true,
+		exitFunc:       func(){ fmt.Println("> os.Exit(1)") },
+	}
+
+	Logln(10, "Default")
+
+	Traceln("This is a trace message.")
+	Debugln("This is a debug message.")
+	Infoln("This is an info message.")
+	Warnln("This is a warn message.")
+	Errorln("This is an error message.")
+	Fatalln("This is a fatal error message.")
 }
 
 func TestTrace(t *testing.T) {
@@ -140,8 +161,8 @@ func TestError(t *testing.T) {
 }
 
 func TestFatal(t *testing.T) {
-	t.Skip("Skipping Fatal functions because they exit")
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
+	LoggerSingleton.exitFunc = func(){ fmt.Println("> os.Exit(1)") }
 
 	t.Run("Fatalln", func(t *testing.T) {
 		Fatalln("This is a fatal ln.")

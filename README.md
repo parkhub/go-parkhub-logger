@@ -171,6 +171,10 @@ granular tags that apply only to a package or a function, the `Sublogger`
 function returns a `Logger` that will include additional tags where it is used
 instead of the default logger. It does not affect the default logger.
 
+The `Sublogger` function creates a logger from the default Logger, but a
+sub-logger can be created from any Logger, even a sub-logger, and will inherit
+all of its tags.
+
 ### Example
 
 ```go
@@ -190,6 +194,10 @@ func main() {
     
     sl.Debugln("with sub-logger")
     // tagged ["environment", "platform", "application", "package", "function"]
+    
+    sl2 := sl.Sublogger("super-fine")
+    sl2.Debugln("with sub-sub-logger")
+	// tagged ["environment", "platform", "application", "package", "function", "super-fine"]
 }
 
 ```
@@ -202,6 +210,11 @@ by its `Handle` method. The handler logs all incoming HTTP requests, logging
 the request method, the requested path, the time it took to complete the
 request, and whether the request was canceled, timed out, or had another context
 error.
+
+The RequestLogger config accepts boolean properties for whether to include the
+headers, params, and/or body in the log, allows for specifying a logger other
+than the default logger, and any additional tags you'd like included on request
+logs.
 
 | Request Status    | Log Level |
 |-------------------|-----------|
@@ -217,6 +230,7 @@ package main
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/gorilla/mux"
 	log "github.com/parkhub/go-parkhub-logger"
@@ -235,6 +249,7 @@ func main() {
 		Headers: false,
 		Params:  true,
 		Body:    false,
+		Tags:    []string{"http-requests"},
 	})
 
 	router := mux.NewRouter()
@@ -247,6 +262,15 @@ func main() {
 		// some route handler
 	})
 	router.Handle("/some-route", rl.Handle(routeHandler))
+	
+	sl := log.Sublogger("debug-routes")
+	drl := log.NewRequestLogger(log.RequestLoggerConfig{
+			Logger:  sl,
+			Headers: true,
+			Tags:    []string{"profiling"},
+    })
+	router.PathPrefix("/debug").Handler(drl.Handle(http.DefaultServeMux))
+	// tags ["some-api", "develop", "debug", "profiling"]
 
 	// etc. ...
 
