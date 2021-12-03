@@ -1,15 +1,19 @@
 package log
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestSublogger(t *testing.T) {
-	SetupLogger(
-		LogLevelDebug,
-		LogFormatPretty,
-		false,
-		false,
-		[]string{"Environment", "Platform", "Application"},
-	)
+	LoggerSingleton = &logger{
+		rawLevel:       LogLevelDebug,
+		format:         LogFormatPretty,
+		tags:           []string{"Environment", "Platform", "Application"},
+		colorizeOutput: false,
+		logCaller:      true,
+		exitFunc:       func(){ fmt.Println("> os.Exit(1)") },
+	}
 
 	sl := Sublogger("Function")
 	sl2 := sl.Sublogger("Sub-Function")

@@ -30,13 +30,13 @@ const (
 func (l Level) color() chalk.Color {
 	switch l {
 	default:
-		fallthrough
-	case LogLevelTrace:
-		fallthrough
-	case LogLevelDebug:
 		return chalk.ResetColor
-	case LogLevelInfo:
+	case LogLevelTrace:
+		return chalk.Blue
+	case LogLevelDebug:
 		return chalk.Cyan
+	case LogLevelInfo:
+		return chalk.Green
 	case LogLevelWarn:
 		return chalk.Yellow
 	case LogLevelError:
