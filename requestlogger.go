@@ -17,6 +17,7 @@ import (
 // RequestLogger is a configured struct with an HTTP Handler method for logging
 // HTTP requests
 type RequestLogger struct {
+	logger     Logger
 	logHeaders bool
 	logParams  bool
 	logBody    bool
@@ -24,9 +25,11 @@ type RequestLogger struct {
 
 // RequestLoggerConfig defines options for which details should be logged
 type RequestLoggerConfig struct {
+	Logger  Logger
 	Headers bool
 	Params  bool
 	Body    bool
+	Tags    []string
 }
 
 // requestLog stores the request data for logging
@@ -59,25 +62,9 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 			end := time.Now().UTC()
 			log.latency = end.Sub(start) / 1000000
 			log.contextError = r.Context().Err()
-			log.log()
+			rl.log(log)
 		}()
 	})
-}
-
-// Label returns the message to print to the log
-func (rl requestLog) Label() string {
-	var label string
-	switch {
-	case errors.Is(rl.contextError, context.DeadlineExceeded):
-		label = fmt.Sprintf("%s %s: %dms (DEADLINE EXCEEDED)", rl.method, rl.path, rl.latency)
-	case errors.Is(rl.contextError, context.Canceled):
-		label = fmt.Sprintf("%s %s: %dms (CANCELLED)", rl.method, rl.path, rl.latency)
-	case rl.contextError != nil:
-		label = fmt.Sprintf("%s %s: %dms (%s)", rl.method, rl.path, rl.latency, rl.contextError)
-	default:
-		label = fmt.Sprintf("%s %s: %dms", rl.method, rl.path, rl.latency)
-	}
-	return label
 }
 
 // String returns the requestLog as a formatted string
@@ -139,7 +126,14 @@ func (rl requestLog) MarshalJSON() ([]byte, error) {
 
 // NewRequestLogger returns a configured RequestLogger
 func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
+	l := config.Logger
+	if l == nil {
+		l = LoggerSingleton
+	}
+	sl := l.Sublogger(config.Tags...)
+	sl.(*sublogger).skipOffset += 3
 	return &RequestLogger{
+		logger:     sl,
 		logHeaders: config.Headers,
 		logParams:  config.Params,
 		logBody:    config.Body,
@@ -147,6 +141,23 @@ func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
 }
 
 // MARK: Private Methods
+
+// log logs a requestLog with the RequestLogger's Logger
+func (rl *RequestLogger) log(log requestLog) {
+	var ll Level
+	switch {
+	case errors.Is(log.contextError, context.DeadlineExceeded):
+		ll = LogLevelWarn
+	case errors.Is(log.contextError, context.Canceled):
+		ll = LogLevelWarn
+	case log.contextError != nil:
+		ll = LogLevelError
+	default:
+		ll = LogLevelDebug
+	}
+
+	rl.logger.Logd(ll, log.label(), log)
+}
 
 func (rl *RequestLogger) makeLog(r *http.Request) (requestLog, error, int) {
 	log := requestLog{
@@ -191,18 +202,18 @@ func (rl *RequestLogger) makeLog(r *http.Request) (requestLog, error, int) {
 	return log, nil, 0
 }
 
-// log outputs the requestLog data to the appropriate level
-func (rl requestLog) log() {
-	var logFunc func(string, interface{})
+// label returns the message to print to the log
+func (rl requestLog) label() string {
+	var label string
 	switch {
 	case errors.Is(rl.contextError, context.DeadlineExceeded):
-		logFunc = Warnd
+		label = fmt.Sprintf("%s %s: %dms (DEADLINE EXCEEDED)", rl.method, rl.path, rl.latency)
 	case errors.Is(rl.contextError, context.Canceled):
-		logFunc = Warnd
+		label = fmt.Sprintf("%s %s: %dms (CANCELLED)", rl.method, rl.path, rl.latency)
 	case rl.contextError != nil:
-		logFunc = Errord
+		label = fmt.Sprintf("%s %s: %dms (%s)", rl.method, rl.path, rl.latency, rl.contextError)
 	default:
-		logFunc = Debugd
+		label = fmt.Sprintf("%s %s: %dms", rl.method, rl.path, rl.latency)
 	}
-	logFunc(rl.Label(), rl)
+	return label
 }

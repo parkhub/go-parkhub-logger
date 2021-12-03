@@ -196,4 +196,14 @@ func TestRequestLogger_Handle(t *testing.T) {
 		})
 	})
 
+	t.Run("Sub-Logger", func(t *testing.T) {
+		SetupLocalLogger(LogLevelDebug)
+		sl := Sublogger("sub-logger")
+		h := NewRequestLogger(RequestLoggerConfig{
+			Logger:  sl,
+			Tags:    []string{"requests"},
+		})
+		h.Handle(mockHandler).ServeHTTP(rr, mockRequest)
+	})
+
 }

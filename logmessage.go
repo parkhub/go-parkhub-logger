@@ -27,7 +27,17 @@ type logMessage struct {
 }
 
 // newLogMessage creates a new logMessage.
-func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, level Level, tags []string, message string, data interface{}) *logMessage {
+func newLogMessage(
+	format Format,
+	colorize bool,
+	logCaller bool,
+	callerSkip int,
+	time logTime,
+	level Level,
+	tags []string,
+	message string,
+	data interface{},
+) *logMessage {
 	trimmedLeft := leadingWhitespace(message)
 	trimmedRight := trailingWhitespace(message)
 	modifiedMessage := strings.TrimSpace(message)
@@ -37,7 +47,7 @@ func newLogMessage(format Format, colorize bool, logCaller bool, time logTime, l
 		var file string
 		var line int
 		var ok bool
-		_, file, line, ok = runtime.Caller(4)
+		_, file, line, ok = runtime.Caller(callerSkip + 1)
 		if ok {
 			fileComponents := strings.Split(file, "/")
 			if len(fileComponents) > 1 {
@@ -95,7 +105,7 @@ func (m logMessage) restoreWhitespace(output string) string {
 }
 
 func (m logMessage) colorizeIfNeeded(output string) string {
-	if !m.colorize || m.rawLevel == LogLevelDebug {
+	if !m.colorize {
 		return output
 	}
 

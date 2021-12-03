@@ -2,13 +2,17 @@ package log
 
 import (
 	"fmt"
-	"os"
 	"time"
 )
 
 // MARK: Types
 
 type Logger interface {
+	// Base log
+	Logln(Level, string)
+	Logf(Level, string, ...interface{})
+	Logd(Level, string, interface{})
+
 	// Trace
 	Traceln(string)
 	Tracef(string, ...interface{})
@@ -38,24 +42,50 @@ type Logger interface {
 	Fatalln(string)
 	Fatalf(string, ...interface{})
 	Fatald(string, interface{})
+
+	// Create a logger object with additional tags
+	Sublogger(tags...string) Logger
+
+	// Private methods
+	newLogMessage(message string, level Level, skipOffset int, data interface{}) *logMessage
+	level() Level
+	exit()
 }
 
+// logger is the basic Logger implementation
 type logger struct {
-	level          Level
+	rawLevel       Level
 	format         Format
 	tags           []string
 	colorizeOutput bool
 	logCaller      bool
+	exitFunc       func()
 }
 
-// MARK: Private methods
+// MARK: Public Methods
+
+// Sublogger returns a new sublogger on the logger with the provided tags
+func (l *logger) Sublogger(tags ...string) Logger {
+	return &sublogger{
+		Logger:  l,
+		subTags: tags,
+	}
+}
+
+// MARK: Private Methods
+
+// level returns the Logger's Level
+func (l *logger) level() Level {
+	return l.rawLevel
+}
 
 // newLogMessage creates a new logMessage
-func (l logger) newLogMessage(output string, level Level, d interface{}) *logMessage {
+func (l *logger) newLogMessage(output string, level Level, skipOffset int, d interface{}) *logMessage {
 	return newLogMessage(
 		l.format,
 		l.colorizeOutput,
 		l.logCaller,
+		5 + skipOffset,
 		newLogTime(time.Now()),
 		level,
 		l.tags,
@@ -66,23 +96,27 @@ func (l logger) newLogMessage(output string, level Level, d interface{}) *logMes
 
 // printMessage prints the message with the given output, level and data. If
 // fatal is true, then os.Exit(1) is called after the log has been printed.
-func (l logger) printMessage(output string, level Level, d interface{}) {
-	if l.level > level {
+func (l *logger) printMessage(output string, level Level, d interface{}) {
+	if l.rawLevel > level {
 		return
 	}
 
-	fmt.Printf(l.newLogMessage(output, level, d).String() + "\n")
+	fmt.Printf(l.newLogMessage(output, level, 0, d).String() + "\n")
+}
+
+func (l *logger) exit() {
+	l.exitFunc()
 }
 
 // MARK: base log methods
 
-// logln prints the output followed by a newline
-func (l *logger) logln(level Level, message string) {
+// Logln prints the output followed by a newline
+func (l *logger) Logln(level Level, message string) {
 	l.printMessage(message, level, nil)
 }
 
-// logf prints the formatted output
-func (l *logger) logf(level Level, format string, a ...interface{}) {
+// Logf prints the formatted output
+func (l *logger) Logf(level Level, format string, a ...interface{}) {
 	l.printMessage(
 		fmt.Sprintf(format, a...),
 		level,
@@ -90,8 +124,8 @@ func (l *logger) logf(level Level, format string, a ...interface{}) {
 	)
 }
 
-// logd prints output string and data
-func (l *logger) logd(level Level, message string, d interface{}) {
+// Logd prints output string and data
+func (l *logger) Logd(level Level, message string, d interface{}) {
 	l.printMessage(message, level, d)
 }
 
@@ -99,103 +133,103 @@ func (l *logger) logd(level Level, message string, d interface{}) {
 
 // Traceln prints the output followed by a newline
 func (l *logger) Traceln(message string) {
-	l.logln(LogLevelTrace, message)
+	l.Logln(LogLevelTrace, message)
 }
 
 // Tracef prints the formatted output
 func (l *logger) Tracef(format string, a ...interface{}) {
-	l.logf(LogLevelTrace, format, a...)
+	l.Logf(LogLevelTrace, format, a...)
 }
 
 // Traced prints the output string and data
 func (l *logger) Traced(message string, d interface{}) {
-	l.logd(LogLevelTrace, message, d)
+	l.Logd(LogLevelTrace, message, d)
 }
 
 // MARK: Debug
 
 // Debugln prints the output followed by a newline
 func (l *logger) Debugln(message string) {
-	l.logln(LogLevelDebug, message)
+	l.Logln(LogLevelDebug, message)
 }
 
 // Debugf prints the formatted output
 func (l *logger) Debugf(format string, a ...interface{}) {
-	l.logf(LogLevelDebug, format, a...)
+	l.Logf(LogLevelDebug, format, a...)
 }
 
 // Debugd prints the output string and data
 func (l *logger) Debugd(message string, d interface{}) {
-	l.logd(LogLevelDebug, message, d)
+	l.Logd(LogLevelDebug, message, d)
 }
 
 // MARK: Info
 
 // Infoln prints the output followed by a newline
 func (l *logger) Infoln(message string) {
-	l.logln(LogLevelInfo, message)
+	l.Logln(LogLevelInfo, message)
 }
 
 // Infof prints the formatted output
 func (l *logger) Infof(format string, a ...interface{}) {
-	l.logf(LogLevelInfo, format, a...)
+	l.Logf(LogLevelInfo, format, a...)
 }
 
 // Infod prints the output string and data
 func (l *logger) Infod(message string, d interface{}) {
-	l.logd(LogLevelInfo, message, d)
+	l.Logd(LogLevelInfo, message, d)
 }
 
 // MARK: Warn
 
 // Warnln prints the output followed by a newline
 func (l *logger) Warnln(message string) {
-	l.logln(LogLevelWarn, message)
+	l.Logln(LogLevelWarn, message)
 }
 
 // Warnf prints the formatted output
 func (l *logger) Warnf(format string, a ...interface{}) {
-	l.logf(LogLevelWarn, format, a...)
+	l.Logf(LogLevelWarn, format, a...)
 }
 
 // Warnd prints the output string and data
 func (l *logger) Warnd(message string, d interface{}) {
-	l.logd(LogLevelWarn, message, d)
+	l.Logd(LogLevelWarn, message, d)
 }
 
 // MARK: Error
 
 // Errorln prints the output followed by a newline
 func (l *logger) Errorln(message string) {
-	l.logln(LogLevelError, message)
+	l.Logln(LogLevelError, message)
 }
 
 // Errorf prints the formatted output
 func (l *logger) Errorf(format string, a ...interface{}) {
-	l.logf(LogLevelError, format, a...)
+	l.Logf(LogLevelError, format, a...)
 }
 
 // Errord prints the output string and data
 func (l *logger) Errord(message string, d interface{}) {
-	l.logd(LogLevelError, message, d)
+	l.Logd(LogLevelError, message, d)
 }
 
 // MARK: Fatal
 
 // Fatalln prints the output followed by a newline
 func (l *logger) Fatalln(message string) {
-	l.logln(LogLevelFatal, message)
-	os.Exit(1)
+	l.Logln(LogLevelFatal, message)
+	l.exitFunc()
 }
 
 // Fatalf prints the formatted output
 func (l *logger) Fatalf(format string, a ...interface{}) {
-	l.logf(LogLevelFatal, format, a...)
-	os.Exit(1)
+	l.Logf(LogLevelFatal, format, a...)
+	l.exitFunc()
 }
 
 // Fatald prints the output string and data
 func (l *logger) Fatald(message string, d interface{}) {
-	l.logd(LogLevelFatal, message, d)
-	os.Exit(1)
+	l.Logd(LogLevelFatal, message, d)
+	l.exitFunc()
 }
