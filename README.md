@@ -121,13 +121,13 @@ func main() {
 		Name: "Logan",
 		Kind: "Log",
 	}
-	
+
 	// Print trace text
 	log.Traceln("This is a trace statement.")
-	
+
 	// Print trace text with additional data
 	log.Traced("This is a trace statement with data.", test)
-	
+
 	// Print a formatted trace statement
 	log.Tracef("This is a formatted trace statement (%d).", 10000)
 
@@ -186,15 +186,15 @@ import (
 
 func main() {
     log.SetupCloudLogger(log.LogLevelInfo, []string{"environment", "platform", "application"})
-    
+
     sl := log.Sublogger("package", "function")
-    
+
     log.Debugln("with default logger")
     // tagged ["environment", "platform", "application"]
-    
+
     sl.Debugln("with sub-logger")
     // tagged ["environment", "platform", "application", "package", "function"]
-    
+
     sl2 := sl.Sublogger("super-fine")
     sl2.Debugln("with sub-sub-logger")
 	// tagged ["environment", "platform", "application", "package", "function", "super-fine"]
@@ -262,7 +262,7 @@ func main() {
 		// some route handler
 	})
 	router.Handle("/some-route", rl.Handle(routeHandler))
-	
+
 	sl := log.Sublogger("debug-routes")
 	drl := log.NewRequestLogger(log.RequestLoggerConfig{
 			Logger:  sl,
@@ -292,7 +292,7 @@ be used to capture the panic as an error to return.
 
 ### Example
 
-```shell
+```go
 // exampleFunction will panic if index is greater than the length of slice - 1
 func exampleFunction(index int, slice []interface{}) interface{} {
   return slice[index]
