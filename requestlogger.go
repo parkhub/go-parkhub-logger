@@ -17,6 +17,7 @@ import (
 // RequestLogger is a configured struct with an HTTP Handler method for logging
 // HTTP requests
 type RequestLogger struct {
+	client                *http.Client
 	logger                Logger
 	logHeaders            bool
 	logParams             bool
@@ -30,6 +31,7 @@ type RequestLogger struct {
 // RequestLoggerConfig defines options for which details should be logged
 type RequestLoggerConfig struct {
 	Logger  Logger
+	Client  *http.Client
 	Headers bool
 	Params  bool
 	Body    bool
@@ -82,6 +84,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log, err, statusCode := makeLog(r, opts)
 		if err != nil {
+			rl.logger.Errord("error creating request log for "+r.URL.String()+":", err)
 			http.Error(w, err.Error(), statusCode)
 			return
 		}
@@ -89,7 +92,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 		start := time.Now().UTC()
 		next.ServeHTTP(w, r)
 		end := time.Now().UTC()
-		log.latency = end.Sub(start) / 1_000_000
+		log.latency = end.Sub(start)
 		log.contextError = r.Context().Err()
 		logChan <- log
 	})
@@ -175,6 +178,7 @@ func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
 	}
 	return &RequestLogger{
 		logger:                sl,
+		client:                config.Client,
 		logHeaders:            config.Headers,
 		logParams:             config.Params,
 		logBody:               config.Body,
@@ -219,8 +223,7 @@ func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int)
 	if opts.Body {
 		buf, bodyErr := io.ReadAll(r.Body)
 		if bodyErr != nil {
-			Errord("Failed to read request body: ", bodyErr)
-			return log, bodyErr, http.StatusBadRequest
+			return log, errors.New("Failed to read request body: " + bodyErr.Error()), http.StatusBadRequest
 		}
 		rdr1 := io.NopCloser(bytes.NewBuffer(buf))
 		rdr2 := io.NopCloser(bytes.NewBuffer(buf))
