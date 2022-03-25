@@ -6,8 +6,11 @@ import "github.com/ttacon/chalk"
 type Level int
 
 const (
+	// logLevelUnset represents an unspecified log level
+	logLevelUnset Level = iota
+
 	// LogLevelTrace trace log level
-	LogLevelTrace Level = iota
+	LogLevelTrace
 
 	// LogLevelDebug debug log level.
 	LogLevelDebug
