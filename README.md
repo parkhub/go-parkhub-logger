@@ -272,6 +272,15 @@ func main() {
 	router.PathPrefix("/debug").Handler(drl.Handle(http.DefaultServeMux))
 	// tags ["some-api", "develop", "debug", "profiling"]
 
+	sl := log.Sublogger("debug-routes")
+	drl := log.NewRequestLogger(log.RequestLoggerConfig{
+			Logger:  sl,
+			Headers: true,
+			Tags:    []string{"profiling"},
+    })
+	router.PathPrefix("/debug").Handler(drl.Handle(http.DefaultServeMux))
+	// tags ["some-api", "develop", "debug", "profiling"]
+
 	// etc. ...
 
 	srv := &http.Server{
@@ -281,5 +290,32 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 	}
 	_ = srv.ListenAndServe()
+}
+```
+
+## Panic Recovery
+
+The `Recover` function can be deferred in code to recover from a panic and log
+it as an error instead, and continue. If an error reference is provided, it can
+be used to capture the panic as an error to return.
+
+### Example
+
+```go
+// exampleFunction will panic if index is greater than the length of slice - 1
+func exampleFunction(index int, slice []interface{}) interface{} {
+  return slice[index]
+}
+
+// goroutine returns no error, but calls a function that may panic
+func goroutine() {
+  defer Recover("goroutine", nil)
+  _ = exampleFunction(1, nil)
+}
+
+// goroutine2 returns an error set if function recovers from a panic
+func goroutine2() (err error) {
+  defer Recover("goroutine2", &err)
+  panic("fatal error!")
 }
 ```
