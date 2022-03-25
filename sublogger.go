@@ -9,7 +9,7 @@ import (
 // sublogger allows for logging with additional tags
 type sublogger struct {
 	Logger
-	subTags []string
+	subTags    []string
 	skipOffset int
 }
 
@@ -18,8 +18,8 @@ type sublogger struct {
 // Sublogger returns a new sublogger with the provided tags
 func Sublogger(tags ...string) Logger {
 	return &sublogger{
-		Logger:  LoggerSingleton,
-		subTags: tags,
+		Logger:     LoggerSingleton,
+		subTags:    tags,
 		skipOffset: 0,
 	}
 }
@@ -27,8 +27,8 @@ func Sublogger(tags ...string) Logger {
 // Sublogger returns a new sublogger with the provided tags
 func (sl *sublogger) Sublogger(tags ...string) Logger {
 	return &sublogger{
-		Logger:  sl,
-		subTags: tags,
+		Logger:     sl,
+		subTags:    tags,
 		skipOffset: 1,
 	}
 }
@@ -163,7 +163,7 @@ func (sl *sublogger) Fatald(message string, d interface{}) {
 
 // newLogMessage creates a new *logMessage
 func (sl *sublogger) newLogMessage(output string, level Level, skipOffset int, d interface{}) *logMessage {
-	m := sl.Logger.newLogMessage(output, level, sl.skipOffset + skipOffset, d)
+	m := sl.Logger.newLogMessage(output, level, sl.skipOffset+skipOffset, d)
 	m.Tags = append(m.Tags, sl.subTags...)
 	return m
 }
