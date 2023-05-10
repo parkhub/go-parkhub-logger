@@ -54,10 +54,13 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 		Body:    rl.logBody,
 	}
 	logChan := make(chan requestLog)
+
 	defer func() {
-		log := <-logChan
-		close(logChan)
-		rl.log(log)
+		go func() {
+			log := <-logChan
+			close(logChan)
+			rl.log(log)
+		}()
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +73,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 		start := time.Now().UTC()
 		next.ServeHTTP(w, r)
 		end := time.Now().UTC()
-		log.latency = end.Sub(start) / 1000000
+		log.latency = end.Sub(start) / 1_000_000
 		log.contextError = r.Context().Err()
 		logChan <- log
 	})
