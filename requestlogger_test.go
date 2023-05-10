@@ -112,7 +112,7 @@ func TestRequestLogger_Handle(t *testing.T) {
 	})
 
 	t.Run("JSON Logger", func(t *testing.T) {
-		SetupCloudLogger(LogLevelDebug, []string{"logger","test"})
+		SetupCloudLogger(LogLevelDebug, []string{"logger", "test"})
 
 		t.Run("no extras", func(t *testing.T) {
 			h := NewRequestLogger(RequestLoggerConfig{
@@ -200,8 +200,8 @@ func TestRequestLogger_Handle(t *testing.T) {
 		SetupLocalLogger(LogLevelDebug)
 		sl := Sublogger("sub-logger")
 		h := NewRequestLogger(RequestLoggerConfig{
-			Logger:  sl,
-			Tags:    []string{"requests"},
+			Logger: sl,
+			Tags:   []string{"requests"},
 		})
 		h.Handle(mockHandler).ServeHTTP(rr, mockRequest)
 	})
