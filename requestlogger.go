@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -48,8 +48,21 @@ type requestLog struct {
 // Handle logs incoming HTTP requests, calls the next handler, and logs uncaught
 // errors in the handler chain
 func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
+	opts := RequestLoggerConfig{
+		Headers: rl.logHeaders,
+		Params:  rl.logParams,
+		Body:    rl.logBody,
+	}
+	logChan := make(chan requestLog)
+
+	go func() {
+		log := <-logChan
+		close(logChan)
+		rl.log(log)
+	}()
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log, err, statusCode := rl.makeLog(r)
+		log, err, statusCode := makeLog(r, opts)
 		if err != nil {
 			http.Error(w, err.Error(), statusCode)
 			return
@@ -57,13 +70,10 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 
 		start := time.Now().UTC()
 		next.ServeHTTP(w, r)
-
-		defer func() {
-			end := time.Now().UTC()
-			log.latency = end.Sub(start) / 1000000
-			log.contextError = r.Context().Err()
-			rl.log(log)
-		}()
+		end := time.Now().UTC()
+		log.latency = end.Sub(start) / 1_000_000
+		log.contextError = r.Context().Err()
+		logChan <- log
 	})
 }
 
@@ -159,27 +169,27 @@ func (rl *RequestLogger) log(log requestLog) {
 	rl.logger.Logd(ll, log.label(), log)
 }
 
-func (rl *RequestLogger) makeLog(r *http.Request) (requestLog, error, int) {
+func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int) {
 	log := requestLog{
 		method: r.Method,
 		path:   r.URL.Path,
 	}
 
-	if rl.logHeaders {
+	if opts.Headers {
 		log.headers = r.Header
 	}
-	if rl.logParams {
+	if opts.Params {
 		log.params = r.URL.Query()
 	}
-	if rl.logBody {
-		buf, bodyErr := ioutil.ReadAll(r.Body)
+	if opts.Body {
+		buf, bodyErr := io.ReadAll(r.Body)
 		if bodyErr != nil {
 			Errord("Failed to read request body: ", bodyErr)
 			return log, bodyErr, http.StatusBadRequest
 		}
-		rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
-		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-		bodyBytes, _ := ioutil.ReadAll(rdr1)
+		rdr1 := io.NopCloser(bytes.NewBuffer(buf))
+		rdr2 := io.NopCloser(bytes.NewBuffer(buf))
+		bodyBytes, _ := io.ReadAll(rdr1)
 
 		log.body = string(bodyBytes)
 		var isJSON bool
