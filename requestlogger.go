@@ -55,12 +55,10 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 	}
 	logChan := make(chan requestLog)
 
-	defer func() {
-		go func() {
-			log := <-logChan
-			close(logChan)
-			rl.log(log)
-		}()
+	go func() {
+		log := <-logChan
+		close(logChan)
+		rl.log(log)
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
