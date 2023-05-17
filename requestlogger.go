@@ -135,14 +135,14 @@ func (rl requestLog) MarshalJSON() ([]byte, error) {
 // MARK: Public Functions
 
 // NewRequestLogger returns a configured RequestLogger
-func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
+func NewRequestLogger(config RequestLoggerConfig) RequestLogger {
 	l := config.Logger
 	if l == nil {
 		l = LoggerSingleton
 	}
-	sl := l.Sublogger(config.Tags...)
-	sl.(*sublogger).skipOffset += 3
-	return &RequestLogger{
+	sl := l.Sublogger(config.Tags...).(sublogger)
+	sl.skipOffset += 3
+	return RequestLogger{
 		logger:     sl,
 		logHeaders: config.Headers,
 		logParams:  config.Params,
