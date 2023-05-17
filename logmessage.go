@@ -37,7 +37,7 @@ func newLogMessage(
 	tags []string,
 	message string,
 	data interface{},
-) *logMessage {
+) logMessage {
 	trimmedLeft := leadingWhitespace(message)
 	trimmedRight := trailingWhitespace(message)
 	modifiedMessage := strings.TrimSpace(message)
@@ -80,7 +80,7 @@ func newLogMessage(
 		}
 	}
 
-	formattedMessage := &logMessage{
+	formattedMessage := logMessage{
 		Timestamp:    time.String(),
 		Level:        level.String(),
 		Tags:         tags,

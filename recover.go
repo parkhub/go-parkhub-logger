@@ -9,7 +9,7 @@ import (
 // Recover recovers from a panic to keep from crashing the application and
 // logs the problem as an error. The error argument can be used to set an error
 // to be returned by the calling function.
-func Recover(in string, err *error) {
+func Recover(in string, err error) {
 	if r := recover(); r != nil {
 		var trace strings.Builder
 		for i := 1; true; i++ {
@@ -23,12 +23,12 @@ func Recover(in string, err *error) {
 
 		e, ok := r.(error)
 		if ok {
-			err = &e
+			err = e
 			Errorf("%s panic: %v%s", in, e, trace.String())
 			return
 		}
 		if err != nil {
-			*err = fmt.Errorf("%v", r)
+			err = fmt.Errorf("%v", r)
 		}
 		Errorf("%s panic: %v%s", in, r, trace.String())
 	}

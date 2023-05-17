@@ -9,7 +9,7 @@ func causePanic() {
 }
 
 func recoverPanic() (err error) {
-	defer Recover("recoverPanic", &err)
+	defer Recover("recoverPanic", err)
 	causePanic()
 	return nil
 }
