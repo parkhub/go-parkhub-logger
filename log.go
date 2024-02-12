@@ -9,7 +9,14 @@ import (
 )
 
 // LoggerSingleton is the main logging instance.
-var LoggerSingleton *logger
+var LoggerSingleton = &logger{
+	rawLevel:       LogLevelTrace,
+	format:         LogFormatJSON,
+	colorizeOutput: false,
+	logCaller:      true,
+	tags:           []string{"UNINITIALIZED!"},
+	exitFunc:       func() { os.Exit(1) },
+}
 
 // MARK: Setup functions
 
@@ -38,6 +45,17 @@ func SetupLogger(level Level, format Format, colorizeOutput bool, logCaller bool
 
 	// Setup logger with options.
 	LoggerSingleton = &logger{
+		rawLevel:       level,
+		format:         format,
+		colorizeOutput: colorizeOutput,
+		logCaller:      logCaller,
+		tags:           tags,
+		exitFunc:       func() { os.Exit(1) },
+	}
+}
+
+func NewLogger(level Level, format Format, colorizeOutput bool, logCaller bool, tags []string) Logger {
+	return &logger{
 		rawLevel:       level,
 		format:         format,
 		colorizeOutput: colorizeOutput,
@@ -181,6 +199,24 @@ func Fatalf(format string, a ...interface{}) {
 // Fatald prints output string and data.
 func Fatald(output string, d interface{}) {
 	Logd(LogLevelFatal, output, d)
+	LoggerSingleton.exit()
+}
+
+// MARK: Panic
+
+// Panicln prints the output followed by a newline and calls os.Exit(1).
+func Panicln(output string) {
+	Logln(LogLevelPanic, output)
+}
+
+// Panicf prints the formatted output.
+func Panicf(format string, a ...interface{}) {
+	Logf(LogLevelPanic, format, a...)
+}
+
+// Panicd prints output string and data.
+func Panicd(output string, d interface{}) {
+	Logd(LogLevelPanic, output, d)
 	LoggerSingleton.exit()
 }
 

@@ -12,7 +12,7 @@ func TestSublogger(t *testing.T) {
 		tags:           []string{"Environment", "Platform", "Application"},
 		colorizeOutput: false,
 		logCaller:      true,
-		exitFunc:       func(){ fmt.Println("> os.Exit(1)") },
+		exitFunc:       func() { fmt.Println("> os.Exit(1)") },
 	}
 
 	sl := Sublogger("Function")

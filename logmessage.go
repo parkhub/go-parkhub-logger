@@ -165,7 +165,7 @@ func (m logMessage) String() string {
 // return the leading whitespace of the input string
 func leadingWhitespace(s string) string {
 	var b strings.Builder
-	for i, _ := range s {
+	for i := range s {
 		if !unicode.IsSpace(rune(s[i])) {
 			return b.String()
 		}

@@ -44,7 +44,10 @@ type Logger interface {
 	Fatald(string, interface{})
 
 	// Create a logger object with additional tags
-	Sublogger(tags...string) Logger
+	Sublogger(tags ...string) Logger
+
+	// Recover from a panic, log it, and set an error variable
+	Recover(label string, err *error)
 
 	// Private methods
 	newLogMessage(message string, level Level, skipOffset int, data interface{}) *logMessage
@@ -85,7 +88,7 @@ func (l *logger) newLogMessage(output string, level Level, skipOffset int, d int
 		l.format,
 		l.colorizeOutput,
 		l.logCaller,
-		5 + skipOffset,
+		5+skipOffset,
 		newLogTime(time.Now()),
 		level,
 		l.tags,
@@ -231,5 +234,25 @@ func (l *logger) Fatalf(format string, a ...interface{}) {
 // Fatald prints the output string and data
 func (l *logger) Fatald(message string, d interface{}) {
 	l.Logd(LogLevelFatal, message, d)
+	l.exitFunc()
+}
+
+// MARK: Panic
+
+// Panicln prints the output followed by a newline
+func (l *logger) Panicln(message string) {
+	l.Logln(LogLevelPanic, message)
+	l.exitFunc()
+}
+
+// Panicf prints the formatted output
+func (l *logger) Panicf(format string, a ...interface{}) {
+	l.Logf(LogLevelPanic, format, a...)
+	l.exitFunc()
+}
+
+// Panicd prints the output string and data
+func (l *logger) Panicd(message string, d interface{}) {
+	l.Logd(LogLevelPanic, message, d)
 	l.exitFunc()
 }

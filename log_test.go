@@ -67,7 +67,7 @@ func TestColor(t *testing.T) {
 		tags:           []string{"Environment", "Platform", "Application"},
 		colorizeOutput: true,
 		logCaller:      true,
-		exitFunc:       func(){ fmt.Println("> os.Exit(1)") },
+		exitFunc:       func() { fmt.Println("> os.Exit(1)") },
 	}
 
 	Logln(10, "Default")
@@ -162,7 +162,7 @@ func TestError(t *testing.T) {
 
 func TestFatal(t *testing.T) {
 	SetupLogger(LogLevelDebug, LogFormatJSON, false, true, []string{"test", "tags"})
-	LoggerSingleton.exitFunc = func(){ fmt.Println("> os.Exit(1)") }
+	LoggerSingleton.exitFunc = func() { fmt.Println("> os.Exit(1)") }
 
 	t.Run("Fatalln", func(t *testing.T) {
 		Fatalln("This is a fatal ln.")
