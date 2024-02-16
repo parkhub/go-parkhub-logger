@@ -56,6 +56,7 @@ type Logger interface {
 type logger struct {
 	rawLevel       Level
 	format         Format
+	timeFormat     TimeFormat
 	tags           []string
 	colorizeOutput bool
 	logCaller      bool
@@ -85,8 +86,9 @@ func (l *logger) newLogMessage(output string, level Level, skipOffset int, d int
 		l.format,
 		l.colorizeOutput,
 		l.logCaller,
-		5 + skipOffset,
-		newLogTime(time.Now()),
+		5+skipOffset,
+		time.Now(),
+		l.timeFormat,
 		level,
 		l.tags,
 		output,

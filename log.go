@@ -16,21 +16,22 @@ var LoggerSingleton *logger
 // SetupLocalLogger is a convenience function for calling SetupLogger with
 // pretty formatted logs, colorized output and no tags.
 func SetupLocalLogger(level Level) {
-	SetupLogger(level, LogFormatPretty, true, true, nil)
+	SetupLogger(level, LogFormatPretty, TimeFormatCentiseconds, true, true, nil)
 }
 
 // SetupCloudLogger is a convenience function for calling SetupLogger with
 // JSON formatted logs, non-colorized output and the given tags.
 func SetupCloudLogger(level Level, tags []string) {
-	SetupLogger(level, LogFormatJSON, false, true, tags)
+	SetupLogger(level, LogFormatJSON, TimeFormatLoggly, false, true, tags)
 }
 
 // SetupLogger creates a new logger.
-func SetupLogger(level Level, format Format, colorizeOutput bool, logCaller bool, tags []string) {
+func SetupLogger(level Level, format Format, timeFormat TimeFormat, colorizeOutput bool, logCaller bool, tags []string) {
 	if LoggerSingleton != nil {
 		// If the logger has already been created, then update its properties
 		LoggerSingleton.rawLevel = level
 		LoggerSingleton.format = format
+		LoggerSingleton.timeFormat = timeFormat
 		LoggerSingleton.colorizeOutput = colorizeOutput
 		LoggerSingleton.tags = tags
 		return

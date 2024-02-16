@@ -10,3 +10,10 @@ const (
 	// LogFormatJSON is a json formatted log output.
 	LogFormatJSON Format = "json"
 )
+
+type TimeFormat string
+
+const (
+	TimeFormatCentiseconds TimeFormat = "centiseconds"
+	TimeFormatLoggly       TimeFormat = "loggly"
+)
