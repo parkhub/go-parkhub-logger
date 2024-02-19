@@ -3,7 +3,6 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"runtime"
 	"strings"
 	"time"
@@ -84,16 +83,7 @@ func newLogMessage(
 	}
 
 	var timestamp string
-	if timeFormat == TimeFormatCentiseconds {
-		nanoseconds := float64(t.Nanosecond())
-		centiseconds := math.Floor(float64(nanoseconds) / 1.0e7)
-		nanoRemainder := nanoseconds - centiseconds*1.0e7
-		centisecondRemainder := math.Floor(float64(nanoRemainder) / 1.0e5)
-		timestamp = fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d-%02d:%02d",
-			t.Year(), t.Month(), t.Day(),
-			t.Hour(), t.Minute(), t.Second(),
-			int(centiseconds), int(centisecondRemainder))
-	} else if timeFormat == TimeFormatLoggly {
+	if timeFormat == TimeFormatLoggly {
 		// According to loggly documentation:
 		// * The only timestamp format accepted is ISO 8601 (e.g., 2013-10-11T22:14:15.003Z).
 		// * Loggly supports microseconds/seconds fraction up to 6 digits, per the spec in RFC5424.

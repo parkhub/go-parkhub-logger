@@ -15,7 +15,7 @@ func recoverPanic() (err error) {
 }
 
 func TestRecover(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatPretty, TimeFormatCentiseconds, false, false, nil)
+	SetupLogger(LogLevelDebug, LogFormatPretty, TimeFormatLoggly, false, false, nil)
 
 	t.Run("No Error", func(t *testing.T) {
 		defer Recover("NoError", nil)

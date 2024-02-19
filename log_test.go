@@ -6,7 +6,7 @@ import (
 )
 
 func TestSetupSingleLogger(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatPretty, TimeFormatCentiseconds, false, true, []string{"test"})
+	SetupLogger(LogLevelDebug, LogFormatPretty, TimeFormatLoggly, false, true, []string{"test"})
 	Infoln("This is an info statement.")
 }
 
@@ -81,7 +81,7 @@ func TestColor(t *testing.T) {
 }
 
 func TestTrace(t *testing.T) {
-	SetupLogger(LogLevelTrace, LogFormatJSON, TimeFormatCentiseconds, false, true, []string{"test", "tags"})
+	SetupLogger(LogLevelTrace, LogFormatJSON, TimeFormatLoggly, false, true, []string{"test", "tags"})
 
 	t.Run("Traceln", func(t *testing.T) {
 		Traceln("This is a trace ln statement.")
@@ -97,7 +97,7 @@ func TestTrace(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatCentiseconds, false, true, []string{"test", "tags"})
+	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatLoggly, false, true, []string{"test", "tags"})
 
 	t.Run("Debugln", func(t *testing.T) {
 		Debugln("This is a debug ln statement.")
@@ -113,7 +113,7 @@ func TestDebug(t *testing.T) {
 }
 
 func TestInfo(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatCentiseconds, false, true, []string{"test", "tags"})
+	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatLoggly, false, true, []string{"test", "tags"})
 
 	t.Run("Infoln", func(t *testing.T) {
 		Infoln("This is an info ln statement.")
@@ -129,7 +129,7 @@ func TestInfo(t *testing.T) {
 }
 
 func TestWarn(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatCentiseconds, false, true, []string{"test", "tags"})
+	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatLoggly, false, true, []string{"test", "tags"})
 
 	t.Run("Warnln", func(t *testing.T) {
 		Warnln("This is a warning ln.")
@@ -145,7 +145,7 @@ func TestWarn(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatCentiseconds, false, true, []string{"test", "tags"})
+	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatLoggly, false, true, []string{"test", "tags"})
 
 	t.Run("Errorln", func(t *testing.T) {
 		Errorln("This is an error ln.")
@@ -161,7 +161,7 @@ func TestError(t *testing.T) {
 }
 
 func TestFatal(t *testing.T) {
-	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatCentiseconds, false, true, []string{"test", "tags"})
+	SetupLogger(LogLevelDebug, LogFormatJSON, TimeFormatLoggly, false, true, []string{"test", "tags"})
 	LoggerSingleton.exitFunc = func() { fmt.Println("> os.Exit(1)") }
 
 	t.Run("Fatalln", func(t *testing.T) {

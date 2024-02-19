@@ -14,6 +14,5 @@ const (
 type TimeFormat string
 
 const (
-	TimeFormatCentiseconds TimeFormat = "centiseconds"
-	TimeFormatLoggly       TimeFormat = "loggly"
+	TimeFormatLoggly TimeFormat = "loggly"
 )

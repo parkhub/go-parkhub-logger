@@ -16,7 +16,7 @@ var LoggerSingleton *logger
 // SetupLocalLogger is a convenience function for calling SetupLogger with
 // pretty formatted logs, colorized output and no tags.
 func SetupLocalLogger(level Level) {
-	SetupLogger(level, LogFormatPretty, TimeFormatCentiseconds, true, true, nil)
+	SetupLogger(level, LogFormatPretty, TimeFormatLoggly, true, true, nil)
 }
 
 // SetupCloudLogger is a convenience function for calling SetupLogger with
