@@ -41,6 +41,7 @@ func SetupLogger(level Level, format Format, timeFormat TimeFormat, colorizeOutp
 	LoggerSingleton = &logger{
 		rawLevel:       level,
 		format:         format,
+		timeFormat:     timeFormat,
 		colorizeOutput: colorizeOutput,
 		logCaller:      logCaller,
 		tags:           tags,
