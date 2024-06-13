@@ -103,7 +103,7 @@ func (l *logger) printMessage(output string, level Level, d interface{}) {
 		return
 	}
 
-	fmt.Printf(l.newLogMessage(output, level, 0, d).String() + "\n")
+	fmt.Println(l.newLogMessage(output, level, 0, d).String())
 }
 
 func (l *logger) exit() {

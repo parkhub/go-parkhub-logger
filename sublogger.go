@@ -174,5 +174,5 @@ func (sl *sublogger) printMessage(output string, level Level, d interface{}) {
 		return
 	}
 
-	fmt.Printf(sl.newLogMessage(output, level, 0, d).String() + "\n")
+	fmt.Println(sl.newLogMessage(output, level, 0, d).String())
 }
