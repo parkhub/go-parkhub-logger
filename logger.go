@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -43,8 +44,12 @@ type Logger interface {
 	Fatalf(string, ...interface{})
 	Fatald(string, interface{})
 
-	// Create a logger object with additional tags
+	// Sublogger creates a logger object with additional tags
 	Sublogger(tags ...string) Logger
+
+	// RequestLogger returns a Logger that implements http.RoundTripper and
+	// provides a middleware func(http.Handler) http.Handler
+	RequestLogger(config RequestLoggerConfig) *RequestLogger
 
 	// Recover from a panic, log it, and set an error variable
 	Recover(label string, err *error)
@@ -74,6 +79,15 @@ func (l *logger) Sublogger(tags ...string) Logger {
 		Logger:  l,
 		subTags: tags,
 	}
+}
+
+func (l *logger) RequestLogger(config RequestLoggerConfig) *RequestLogger {
+	return NewRequestLogger(RequestLoggerConfig{Logger: l}.apply(config))
+}
+
+func (l *logger) RoundTripper(config RequestLoggerConfig) http.RoundTripper {
+	config.Logger = l
+	return NewRequestLogger(config)
 }
 
 // MARK: Private Methods
@@ -239,22 +253,8 @@ func (l *logger) Fatald(message string, d interface{}) {
 	l.exitFunc()
 }
 
-// MARK: Panic
+// MARK: Interface Checks
 
-// Panicln prints the output followed by a newline
-func (l *logger) Panicln(message string) {
-	l.Logln(LogLevelPanic, message)
-	l.exitFunc()
-}
-
-// Panicf prints the formatted output
-func (l *logger) Panicf(format string, a ...interface{}) {
-	l.Logf(LogLevelPanic, format, a...)
-	l.exitFunc()
-}
-
-// Panicd prints the output string and data
-func (l *logger) Panicd(message string, d interface{}) {
-	l.Logd(LogLevelPanic, message, d)
-	l.exitFunc()
-}
+var (
+	_ Logger = (*logger)(nil)
+)
