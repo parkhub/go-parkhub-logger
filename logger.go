@@ -44,7 +44,7 @@ type Logger interface {
 	Fatald(string, interface{})
 
 	// Create a logger object with additional tags
-	Sublogger(tags...string) Logger
+	Sublogger(tags ...string) Logger
 
 	// Private methods
 	newLogMessage(message string, level Level, skipOffset int, data interface{}) *logMessage
@@ -103,7 +103,7 @@ func (l *logger) printMessage(output string, level Level, d interface{}) {
 		return
 	}
 
-	fmt.Printf(l.newLogMessage(output, level, 0, d).String() + "\n")
+	fmt.Println(l.newLogMessage(output, level, 0, d).String())
 }
 
 func (l *logger) exit() {
