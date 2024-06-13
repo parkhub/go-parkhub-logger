@@ -8,6 +8,16 @@ import (
 	"os"
 )
 
+type LoggerConfig struct {
+	Level      Level
+	Format     Format
+	TimeFormat TimeFormat
+	Tags       []string
+	Colorize   bool
+	LogCaller  bool
+	ExitFunc   func()
+}
+
 // LoggerSingleton is the main logging instance.
 var LoggerSingleton = &logger{
 	rawLevel:       LogLevelTrace,
@@ -24,7 +34,7 @@ var LoggerSingleton = &logger{
 // SetupLocalLogger is a convenience function for calling SetupLogger with
 // pretty formatted logs, colorized output and no tags.
 func SetupLocalLogger(level Level) {
-	SetupLogger(level, LogFormatPretty, TimeFormatLoggly, true, true, nil)
+	SetupLogger(level, LogFormatPretty, TimeFormatDefault, true, true, nil)
 }
 
 // SetupCloudLogger is a convenience function for calling SetupLogger with
@@ -57,14 +67,16 @@ func SetupLogger(level Level, format Format, timeFormat TimeFormat, colorizeOutp
 	}
 }
 
-func NewLogger(level Level, format Format, colorizeOutput bool, logCaller bool, tags []string) Logger {
+func NewLogger(config LoggerConfig) Logger {
+	config = defaultConfig.apply(config)
 	return &logger{
-		rawLevel:       level,
-		format:         format,
-		colorizeOutput: colorizeOutput,
-		logCaller:      logCaller,
-		tags:           tags,
-		exitFunc:       func() { os.Exit(1) },
+		rawLevel:       config.Level,
+		format:         config.Format,
+		timeFormat:     config.TimeFormat,
+		colorizeOutput: config.Colorize,
+		logCaller:      config.LogCaller,
+		tags:           config.Tags,
+		exitFunc:       config.ExitFunc,
 	}
 }
 
@@ -219,4 +231,32 @@ func joinToString(a ...interface{}) string {
 		}
 	}
 	return fmt.Sprintf(format, a...)
+}
+
+func (cfg LoggerConfig) apply(config LoggerConfig) LoggerConfig {
+	if config.Level == logLevelUnset {
+		config.Level = cfg.Level
+	}
+	if config.Format == "" {
+		config.Format = cfg.Format
+	}
+	if config.TimeFormat == "" {
+		config.TimeFormat = cfg.TimeFormat
+	}
+	if config.ExitFunc == nil {
+		config.ExitFunc = cfg.ExitFunc
+	}
+	return config
+}
+
+// MARK: Private Variables
+
+var defaultConfig = LoggerConfig{
+	Level:      LogLevelInfo,
+	Format:     LogFormatJSON,
+	TimeFormat: TimeFormatLoggly,
+	Tags:       nil,
+	Colorize:   false,
+	LogCaller:  true,
+	ExitFunc:   func() { os.Exit(1) },
 }

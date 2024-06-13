@@ -83,14 +83,10 @@ func newLogMessage(
 	}
 
 	var timestamp string
-	if timeFormat == TimeFormatLoggly {
-		// According to loggly documentation:
-		// * The only timestamp format accepted is ISO 8601 (e.g., 2013-10-11T22:14:15.003Z).
-		// * Loggly supports microseconds/seconds fraction up to 6 digits, per the spec in RFC5424.
-		timestamp = t.UTC().Format("2006-01-02T15:04:05.000000Z07:00")
-	} else {
-		timestamp = t.String()
+	if timeFormat == "" {
+		timeFormat = TimeFormatDefault
 	}
+	timestamp = t.UTC().Format(string(timeFormat))
 
 	formattedMessage := &logMessage{
 		Timestamp:    timestamp,
