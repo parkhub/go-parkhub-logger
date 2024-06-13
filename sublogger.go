@@ -159,6 +159,26 @@ func (sl *sublogger) Fatald(message string, d interface{}) {
 	sl.exit()
 }
 
+// MARK: Panic
+
+// Panicln prints the output followed by a newline
+func (sl *sublogger) Panicln(message string) {
+	sl.Logln(LogLevelPanic, message)
+	sl.exit()
+}
+
+// Panicf prints the formatted output
+func (sl *sublogger) Panicf(format string, a ...interface{}) {
+	sl.Logf(LogLevelPanic, format, a...)
+	sl.exit()
+}
+
+// Panicd prints the output string and data
+func (sl *sublogger) Panicd(message string, d interface{}) {
+	sl.Logd(LogLevelPanic, message, d)
+	sl.exit()
+}
+
 // MARK: Private Methods
 
 // newLogMessage creates a new *logMessage

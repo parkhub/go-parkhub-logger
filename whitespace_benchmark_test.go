@@ -35,7 +35,7 @@ func trailingWhitespaceRegex(s string) string {
 
 func leadingWhitespaceScan(s string) string {
 	var b strings.Builder
-	for i, _ := range s {
+	for i := range s {
 		if !unicode.IsSpace(rune(s[i])) {
 			return b.String()
 		}
@@ -98,7 +98,7 @@ func BenchmarkBuildString(b *testing.B) {
 		b.Run("WriteString(string(rune(s[i])))", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				var b strings.Builder
-				for i, _ := range testRuneString {
+				for i := range testRuneString {
 					_ = unicode.IsSpace(rune(testRuneString[i]))
 					b.WriteString(string(rune(testRuneString[i])))
 				}
@@ -107,7 +107,7 @@ func BenchmarkBuildString(b *testing.B) {
 		b.Run("WriteString(string(s[i]))", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				var b strings.Builder
-				for i, _ := range testRuneString {
+				for i := range testRuneString {
 					_ = unicode.IsSpace(rune(testRuneString[i]))
 					b.WriteString(string(testRuneString[i]))
 				}
@@ -116,7 +116,7 @@ func BenchmarkBuildString(b *testing.B) {
 		b.Run("Write([]byte{s[i]})", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				var b strings.Builder
-				for i, _ := range testRuneString {
+				for i := range testRuneString {
 					_ = unicode.IsSpace(rune(testRuneString[i]))
 					b.Write([]byte{testRuneString[i]})
 				}
