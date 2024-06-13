@@ -17,19 +17,39 @@ import (
 // RequestLogger is a configured struct with an HTTP Handler method for logging
 // HTTP requests
 type RequestLogger struct {
-	logger     Logger
-	logHeaders bool
-	logParams  bool
-	logBody    bool
+	client                *http.Client
+	logger                Logger
+	logHeaders            bool
+	logParams             bool
+	logBody               bool
+	normalLevel           Level
+	deadlineExceededLevel Level
+	contextCancelledLevel Level
+	contextErrorLevel     Level
 }
 
 // RequestLoggerConfig defines options for which details should be logged
 type RequestLoggerConfig struct {
 	Logger  Logger
+	Client  *http.Client
 	Headers bool
 	Params  bool
 	Body    bool
 	Tags    []string
+
+	// NormalLevel is the log level to use for requests without context errors
+	NormalLevel Level
+
+	// DeadlineExceededLevel is the log level to use for requests that time out
+	DeadlineExceededLevel Level
+
+	// ContextCancelledLevel is the log level to use for requests that are
+	// cancelled for reasons other than a timeout
+	ContextCancelledLevel Level
+
+	// ContextErrorLevel is the log level to use for requests that have an other
+	// context error
+	ContextErrorLevel Level
 }
 
 // requestLog stores the request data for logging
@@ -64,6 +84,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log, err, statusCode := makeLog(r, opts)
 		if err != nil {
+			rl.logger.Errord("error creating request log for "+r.URL.String()+":", err)
 			http.Error(w, err.Error(), statusCode)
 			return
 		}
@@ -71,7 +92,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 		start := time.Now().UTC()
 		next.ServeHTTP(w, r)
 		end := time.Now().UTC()
-		log.latency = end.Sub(start) / 1_000_000
+		log.latency = end.Sub(start)
 		log.contextError = r.Context().Err()
 		logChan <- log
 	})
@@ -142,11 +163,29 @@ func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
 	}
 	sl := l.Sublogger(config.Tags...)
 	sl.(*sublogger).skipOffset += 3
+	normal, deadline, cancelled, ctxErr := LogLevelDebug, LogLevelWarn, LogLevelWarn, LogLevelError
+	if config.NormalLevel != logLevelUnset {
+		normal = config.NormalLevel
+	}
+	if config.DeadlineExceededLevel != logLevelUnset {
+		deadline = config.DeadlineExceededLevel
+	}
+	if config.ContextCancelledLevel != logLevelUnset {
+		cancelled = config.ContextCancelledLevel
+	}
+	if config.ContextErrorLevel != logLevelUnset {
+		ctxErr = config.ContextErrorLevel
+	}
 	return &RequestLogger{
-		logger:     sl,
-		logHeaders: config.Headers,
-		logParams:  config.Params,
-		logBody:    config.Body,
+		logger:                sl,
+		client:                config.Client,
+		logHeaders:            config.Headers,
+		logParams:             config.Params,
+		logBody:               config.Body,
+		normalLevel:           normal,
+		deadlineExceededLevel: deadline,
+		contextCancelledLevel: cancelled,
+		contextErrorLevel:     ctxErr,
 	}
 }
 
@@ -157,13 +196,13 @@ func (rl *RequestLogger) log(log requestLog) {
 	var ll Level
 	switch {
 	case errors.Is(log.contextError, context.DeadlineExceeded):
-		ll = LogLevelWarn
+		ll = rl.deadlineExceededLevel
 	case errors.Is(log.contextError, context.Canceled):
-		ll = LogLevelWarn
+		ll = rl.contextCancelledLevel
 	case log.contextError != nil:
-		ll = LogLevelError
+		ll = rl.contextErrorLevel
 	default:
-		ll = LogLevelDebug
+		ll = rl.normalLevel
 	}
 
 	rl.logger.Logd(ll, log.label(), log)
@@ -184,8 +223,7 @@ func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int)
 	if opts.Body {
 		buf, bodyErr := io.ReadAll(r.Body)
 		if bodyErr != nil {
-			Errord("Failed to read request body: ", bodyErr)
-			return log, bodyErr, http.StatusBadRequest
+			return log, errors.New("Failed to read request body: " + bodyErr.Error()), http.StatusBadRequest
 		}
 		rdr1 := io.NopCloser(bytes.NewBuffer(buf))
 		rdr2 := io.NopCloser(bytes.NewBuffer(buf))

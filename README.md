@@ -121,13 +121,13 @@ func main() {
 		Name: "Logan",
 		Kind: "Log",
 	}
-	
+
 	// Print trace text
 	log.Traceln("This is a trace statement.")
-	
+
 	// Print trace text with additional data
 	log.Traced("This is a trace statement with data.", test)
-	
+
 	// Print a formatted trace statement
 	log.Tracef("This is a formatted trace statement (%d).", 10000)
 
@@ -162,6 +162,46 @@ func main() {
 	log.Fatalf("This is an error %d.", 10000)
 }
 ```
+
+## Sub-Loggers
+
+The tags provided when setting up the logger will be included in every log
+statement, and so should apply to the entire application instance. For more
+granular tags that apply only to a package or a function, the `Sublogger`
+function returns a `Logger` that will include additional tags where it is used
+instead of the default logger. It does not affect the default logger.
+
+The `Sublogger` function creates a logger from the default Logger, but a
+sub-logger can be created from any Logger, even a sub-logger, and will inherit
+all of its tags.
+
+### Example
+
+```go
+package main
+
+import (
+    log "github.com/parkhub/go-parkhub-logger"
+)
+
+func main() {
+    log.SetupCloudLogger(log.LogLevelInfo, []string{"environment", "platform", "application"})
+
+    sl := log.Sublogger("package", "function")
+
+    log.Debugln("with default logger")
+    // tagged ["environment", "platform", "application"]
+
+    sl.Debugln("with sub-logger")
+    // tagged ["environment", "platform", "application", "package", "function"]
+
+    sl2 := sl.Sublogger("super-fine")
+    sl2.Debugln("with sub-sub-logger")
+	// tagged ["environment", "platform", "application", "package", "function", "super-fine"]
+}
+
+```
+
 
 ## Sub-Loggers
 
@@ -262,7 +302,7 @@ func main() {
 		// some route handler
 	})
 	router.Handle("/some-route", rl.Handle(routeHandler))
-	
+
 	sl := log.Sublogger("debug-routes")
 	drl := log.NewRequestLogger(log.RequestLoggerConfig{
 			Logger:  sl,

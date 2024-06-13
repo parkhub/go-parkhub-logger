@@ -44,7 +44,7 @@ type Logger interface {
 	Fatald(string, interface{})
 
 	// Create a logger object with additional tags
-	Sublogger(tags...string) Logger
+	Sublogger(tags ...string) Logger
 
 	// Private methods
 	newLogMessage(message string, level Level, skipOffset int, data interface{}) *logMessage
