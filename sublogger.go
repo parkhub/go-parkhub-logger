@@ -33,6 +33,10 @@ func (sl *sublogger) Sublogger(tags ...string) Logger {
 	}
 }
 
+func (sl *sublogger) RequestLogger(config RequestLoggerConfig) *RequestLogger {
+	return NewRequestLogger(RequestLoggerConfig{Logger: sl}.apply(config))
+}
+
 // MARK: base log methods
 
 // Logln prints the output followed by a newline
@@ -176,3 +180,9 @@ func (sl *sublogger) printMessage(output string, level Level, d interface{}) {
 
 	fmt.Println(sl.newLogMessage(output, level, 0, d).String())
 }
+
+// MARK: Interface Checks
+
+var (
+	_ Logger = (*sublogger)(nil)
+)

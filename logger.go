@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -43,8 +44,15 @@ type Logger interface {
 	Fatalf(string, ...interface{})
 	Fatald(string, interface{})
 
-	// Create a logger object with additional tags
+	// Sublogger creates a logger object with additional tags
 	Sublogger(tags ...string) Logger
+
+	// RequestLogger returns a Logger that implements http.RoundTripper and
+	// provides a middleware func(http.Handler) http.Handler
+	RequestLogger(config RequestLoggerConfig) *RequestLogger
+
+	// Recover from a panic, log it, and set an error variable
+	Recover(label string, err *error)
 
 	// Private methods
 	newLogMessage(message string, level Level, skipOffset int, data interface{}) *logMessage
@@ -71,6 +79,15 @@ func (l *logger) Sublogger(tags ...string) Logger {
 		Logger:  l,
 		subTags: tags,
 	}
+}
+
+func (l *logger) RequestLogger(config RequestLoggerConfig) *RequestLogger {
+	return NewRequestLogger(RequestLoggerConfig{Logger: l}.apply(config))
+}
+
+func (l *logger) RoundTripper(config RequestLoggerConfig) http.RoundTripper {
+	config.Logger = l
+	return NewRequestLogger(config)
 }
 
 // MARK: Private Methods
@@ -235,3 +252,9 @@ func (l *logger) Fatald(message string, d interface{}) {
 	l.Logd(LogLevelFatal, message, d)
 	l.exitFunc()
 }
+
+// MARK: Interface Checks
+
+var (
+	_ Logger = (*logger)(nil)
+)
