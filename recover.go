@@ -52,12 +52,12 @@ func (l *logger) Recover(in string, err *error) {
 		e, ok := r.(error)
 		if ok {
 			err = &e
-			l.Panicf("%s panic: %v%s", in, e, trace.String())
+			l.Errorf("%s panic: %v%s", in, e, trace.String())
 			return
 		}
 		if err != nil {
 			*err = fmt.Errorf("%v", r)
 		}
-		l.Panicf("%s panic: %v%s", in, r, trace.String())
+		l.Errorf("%s panic: %v%s", in, r, trace.String())
 	}
 }

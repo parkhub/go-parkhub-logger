@@ -26,9 +26,6 @@ const (
 
 	// LogLevelFatal fatal log level.
 	LogLevelFatal
-
-	// LogLevelPanic panic log level
-	LogLevelPanic
 )
 
 // MARK: Methods
@@ -45,7 +42,7 @@ func (l Level) color() chalk.Color {
 		return chalk.Green
 	case LogLevelWarn:
 		return chalk.Yellow
-	case LogLevelError, LogLevelPanic:
+	case LogLevelError:
 		return chalk.Red
 	case LogLevelFatal:
 		return chalk.Magenta
@@ -68,8 +65,6 @@ func (l Level) String() string {
 		return "ERROR"
 	case LogLevelFatal:
 		return "FATAL"
-	case LogLevelPanic:
-		return "PANIC"
 	default:
 		return ""
 	}
