@@ -173,11 +173,13 @@ func Errord(output string, d interface{}) {
 // Fatalln prints the output followed by a newline and calls os.Exit(1).
 func Fatalln(output string) {
 	Logln(LogLevelFatal, output)
+	LoggerSingleton.exit()
 }
 
 // Fatalf prints the formatted output.
 func Fatalf(format string, a ...interface{}) {
 	Logf(LogLevelFatal, format, a...)
+	LoggerSingleton.exit()
 }
 
 // Fatald prints output string and data.
