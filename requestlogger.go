@@ -34,6 +34,7 @@ type RequestLoggerConfig struct {
 	Client  *http.Client
 	Headers bool
 	Params  bool
+	GraphQL bool
 	Body    bool
 	Tags    []string
 
@@ -59,6 +60,7 @@ type requestLog struct {
 	path         string
 	params       map[string][]string
 	body         string
+	graphql      string
 	latency      time.Duration
 	contextError error
 }
@@ -219,6 +221,30 @@ func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int)
 	}
 	if opts.Params {
 		log.params = r.URL.Query()
+	}
+	if opts.GraphQL {
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			return log, fmt.Errorf("error reading request body: %s", err), http.StatusBadRequest
+		}
+		r.Body.Close()
+
+		var bodyJson map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &bodyJson); err == nil {
+			opName, opOk := bodyJson["operationName"].(string)
+			q, qOk := bodyJson["query"].(string)
+			if opOk && qOk && opName != "" && q != "" {
+				// Only log properly formatted graphql requests
+				// (json with operationName and query)
+				if strings.HasPrefix(q, "query") {
+					log.graphql = fmt.Sprintf("q %s", opName)
+				} else if strings.HasPrefix(q, "mutation") {
+					log.graphql = fmt.Sprintf("m %s", opName)
+				}
+			}
+		}
+
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 	if opts.Body {
 		buf, bodyErr := io.ReadAll(r.Body)
