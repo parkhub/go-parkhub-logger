@@ -22,6 +22,7 @@ type RequestLogger struct {
 	logHeaders            bool
 	logParams             bool
 	logBody               bool
+	logGraphql            bool
 	normalLevel           Level
 	deadlineExceededLevel Level
 	contextCancelledLevel Level
@@ -34,6 +35,7 @@ type RequestLoggerConfig struct {
 	Client  *http.Client
 	Headers bool
 	Params  bool
+	GraphQL bool
 	Body    bool
 	Tags    []string
 
@@ -59,6 +61,7 @@ type requestLog struct {
 	path         string
 	params       map[string][]string
 	body         string
+	graphql      string
 	latency      time.Duration
 	contextError error
 }
@@ -72,6 +75,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 		Headers: rl.logHeaders,
 		Params:  rl.logParams,
 		Body:    rl.logBody,
+		GraphQL: rl.logGraphql,
 	}
 	logChan := make(chan requestLog)
 
@@ -100,7 +104,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 
 // String returns the requestLog as a formatted string
 func (rl requestLog) String() string {
-	var headerStr, paramStr, bodyStr string
+	var headerStr, paramStr, bodyStr, graphqlStr string
 
 	// format headers
 	if i, l := 0, len(rl.headers); l > 0 {
@@ -127,7 +131,11 @@ func (rl requestLog) String() string {
 		bodyStr = "\nBody: " + rl.body
 	}
 
-	return headerStr + paramStr + bodyStr
+	if rl.graphql != "" {
+		graphqlStr = rl.graphql
+	}
+
+	return graphqlStr + headerStr + paramStr + bodyStr
 }
 
 // MarshalJSON returns the requestLog as a JSON object
@@ -181,6 +189,7 @@ func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
 		client:                config.Client,
 		logHeaders:            config.Headers,
 		logParams:             config.Params,
+		logGraphql:            config.GraphQL,
 		logBody:               config.Body,
 		normalLevel:           normal,
 		deadlineExceededLevel: deadline,
@@ -220,6 +229,30 @@ func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int)
 	if opts.Params {
 		log.params = r.URL.Query()
 	}
+	if opts.GraphQL {
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			return log, fmt.Errorf("error reading request body: %s", err), http.StatusBadRequest
+		}
+		r.Body.Close()
+
+		var bodyJson map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &bodyJson); err == nil {
+			opName, opOk := bodyJson["operationName"].(string)
+			q, qOk := bodyJson["query"].(string)
+			if opOk && qOk && opName != "" && q != "" {
+				// Only log properly formatted graphql requests
+				// (json with operationName and query)
+				if strings.HasPrefix(q, "query") {
+					log.graphql = fmt.Sprintf("q %s", opName)
+				} else if strings.HasPrefix(q, "mutation") {
+					log.graphql = fmt.Sprintf("m %s", opName)
+				}
+			}
+		}
+
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	}
 	if opts.Body {
 		buf, bodyErr := io.ReadAll(r.Body)
 		if bodyErr != nil {
@@ -252,16 +285,17 @@ func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int)
 
 // label returns the message to print to the log
 func (rl requestLog) label() string {
+	latencyMs := rl.latency * time.Nanosecond / time.Millisecond
 	var label string
 	switch {
 	case errors.Is(rl.contextError, context.DeadlineExceeded):
-		label = fmt.Sprintf("%s %s: %dms (DEADLINE EXCEEDED)", rl.method, rl.path, rl.latency)
+		label = fmt.Sprintf("%s %s: %dms (DEADLINE EXCEEDED)", rl.method, rl.path, latencyMs)
 	case errors.Is(rl.contextError, context.Canceled):
-		label = fmt.Sprintf("%s %s: %dms (CANCELLED)", rl.method, rl.path, rl.latency)
+		label = fmt.Sprintf("%s %s: %dms (CANCELLED)", rl.method, rl.path, latencyMs)
 	case rl.contextError != nil:
-		label = fmt.Sprintf("%s %s: %dms (%s)", rl.method, rl.path, rl.latency, rl.contextError)
+		label = fmt.Sprintf("%s %s: %dms (%s)", rl.method, rl.path, latencyMs, rl.contextError)
 	default:
-		label = fmt.Sprintf("%s %s: %dms", rl.method, rl.path, rl.latency)
+		label = fmt.Sprintf("%s %s: %dms", rl.method, rl.path, latencyMs)
 	}
 	return label
 }
