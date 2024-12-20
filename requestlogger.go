@@ -285,16 +285,17 @@ func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int)
 
 // label returns the message to print to the log
 func (rl requestLog) label() string {
+	latencyMs := rl.latency * time.Nanosecond / time.Millisecond
 	var label string
 	switch {
 	case errors.Is(rl.contextError, context.DeadlineExceeded):
-		label = fmt.Sprintf("%s %s: %dms (DEADLINE EXCEEDED)", rl.method, rl.path, rl.latency)
+		label = fmt.Sprintf("%s %s: %dms (DEADLINE EXCEEDED)", rl.method, rl.path, latencyMs)
 	case errors.Is(rl.contextError, context.Canceled):
-		label = fmt.Sprintf("%s %s: %dms (CANCELLED)", rl.method, rl.path, rl.latency)
+		label = fmt.Sprintf("%s %s: %dms (CANCELLED)", rl.method, rl.path, latencyMs)
 	case rl.contextError != nil:
-		label = fmt.Sprintf("%s %s: %dms (%s)", rl.method, rl.path, rl.latency, rl.contextError)
+		label = fmt.Sprintf("%s %s: %dms (%s)", rl.method, rl.path, latencyMs, rl.contextError)
 	default:
-		label = fmt.Sprintf("%s %s: %dms", rl.method, rl.path, rl.latency)
+		label = fmt.Sprintf("%s %s: %dms", rl.method, rl.path, latencyMs)
 	}
 	return label
 }
