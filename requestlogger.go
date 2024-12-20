@@ -22,6 +22,7 @@ type RequestLogger struct {
 	logHeaders            bool
 	logParams             bool
 	logBody               bool
+	logGraphql            bool
 	normalLevel           Level
 	deadlineExceededLevel Level
 	contextCancelledLevel Level
@@ -74,6 +75,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 		Headers: rl.logHeaders,
 		Params:  rl.logParams,
 		Body:    rl.logBody,
+		GraphQL: rl.logGraphql,
 	}
 	logChan := make(chan requestLog)
 
@@ -102,7 +104,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 
 // String returns the requestLog as a formatted string
 func (rl requestLog) String() string {
-	var headerStr, paramStr, bodyStr string
+	var headerStr, paramStr, bodyStr, graphqlStr string
 
 	// format headers
 	if i, l := 0, len(rl.headers); l > 0 {
@@ -129,7 +131,11 @@ func (rl requestLog) String() string {
 		bodyStr = "\nBody: " + rl.body
 	}
 
-	return headerStr + paramStr + bodyStr
+	if rl.graphql != "" {
+		graphqlStr = rl.graphql
+	}
+
+	return graphqlStr + headerStr + paramStr + bodyStr
 }
 
 // MarshalJSON returns the requestLog as a JSON object
@@ -183,6 +189,7 @@ func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
 		client:                config.Client,
 		logHeaders:            config.Headers,
 		logParams:             config.Params,
+		logGraphql:            config.GraphQL,
 		logBody:               config.Body,
 		normalLevel:           normal,
 		deadlineExceededLevel: deadline,
