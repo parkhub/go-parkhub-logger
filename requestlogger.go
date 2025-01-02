@@ -157,6 +157,9 @@ func (rl requestLog) MarshalJSON() ([]byte, error) {
 	if len(rl.body) > 0 {
 		obj["body"] = rl.body
 	}
+	if len(rl.graphql) > 0 {
+		obj["graphql"] = rl.graphql
+	}
 
 	return json.Marshal(obj)
 }
