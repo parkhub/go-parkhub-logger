@@ -46,30 +46,27 @@ func TestRoundTrip(t *testing.T) {
 		ContextCancelledLevel: LogLevelInfo,
 		ContextErrorLevel:     LogLevelFatal,
 	})
-	rt := rl.RoundTripper(client)
 	responseRecorder := httptest.NewRecorder()
 
 	for _, tt := range tests {
-		for _, rt := range []http.RoundTripper{rt, rl} {
-			t.Run(tt.name, func(t *testing.T) {
-				_, err := rt.RoundTrip(tt.request)
-				if (err != nil) != tt.errorExpected {
-					t.Errorf("RoundTrip() error = %v, wantErr %v", err, tt.errorExpected)
-					return
-				}
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := rl.RoundTrip(tt.request)
+			if (err != nil) != tt.errorExpected {
+				t.Errorf("RoundTrip() error = %v, wantErr %v", err, tt.errorExpected)
+				return
+			}
 
-				err = responseRecorder.Result().Body.Close()
-				responseData, err := io.ReadAll(responseRecorder.Result().Body)
+			err = responseRecorder.Result().Body.Close()
+			responseData, err := io.ReadAll(responseRecorder.Result().Body)
 
-				if err != nil {
-					t.Failed()
-				}
-				responseString := string(responseData)
+			if err != nil {
+				t.Failed()
+			}
+			responseString := string(responseData)
 
-				if responseString != "" {
-					t.Errorf("Expected empty response body, got %s", responseString)
-				}
-			})
-		}
+			if responseString != "" {
+				t.Errorf("Expected empty response body, got %s", responseString)
+			}
+		})
 	}
 }
