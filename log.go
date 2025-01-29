@@ -9,7 +9,15 @@ import (
 )
 
 // LoggerSingleton is the main logging instance.
-var LoggerSingleton *logger
+var LoggerSingleton = &logger{
+	rawLevel:       LogLevelTrace,
+	format:         LogFormatJSON,
+	timeFormat:     TimeFormatLoggly,
+	tags:           nil,
+	colorizeOutput: false,
+	logCaller:      true,
+	exitFunc:       func() { os.Exit(1) },
+}
 
 // MARK: Setup functions
 

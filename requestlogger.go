@@ -17,8 +17,9 @@ import (
 // RequestLogger is a configured struct with an HTTP Handler method for logging
 // HTTP requests
 type RequestLogger struct {
+	Logger
 	client                *http.Client
-	logger                Logger
+	tags                  []string
 	logHeaders            bool
 	logParams             bool
 	logBody               bool
@@ -29,7 +30,8 @@ type RequestLogger struct {
 	contextErrorLevel     Level
 }
 
-// RequestLoggerConfig defines options for which details should be logged
+// RequestLoggerConfig defines options for which details should be logged.
+// Setting a LogLevel to 0 will prevent it from being logged.
 type RequestLoggerConfig struct {
 	Logger  Logger
 	Client  *http.Client
@@ -88,7 +90,7 @@ func (rl *RequestLogger) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log, err, statusCode := makeLog(r, opts)
 		if err != nil {
-			rl.logger.Errord("error creating request log for "+r.URL.String()+":", err)
+			rl.Logger.Errord("error creating request log for "+r.URL.String()+":", err)
 			http.Error(w, err.Error(), statusCode)
 			return
 		}
@@ -168,37 +170,42 @@ func (rl requestLog) MarshalJSON() ([]byte, error) {
 
 // NewRequestLogger returns a configured RequestLogger
 func NewRequestLogger(config RequestLoggerConfig) *RequestLogger {
+	config = defaultRLConfig.apply(config)
 	l := config.Logger
-	if l == nil {
-		l = LoggerSingleton
-	}
 	sl := l.Sublogger(config.Tags...)
 	sl.(*sublogger).skipOffset += 3
-	normal, deadline, cancelled, ctxErr := LogLevelDebug, LogLevelWarn, LogLevelWarn, LogLevelError
-	if config.NormalLevel != logLevelUnset {
-		normal = config.NormalLevel
-	}
-	if config.DeadlineExceededLevel != logLevelUnset {
-		deadline = config.DeadlineExceededLevel
-	}
-	if config.ContextCancelledLevel != logLevelUnset {
-		cancelled = config.ContextCancelledLevel
-	}
-	if config.ContextErrorLevel != logLevelUnset {
-		ctxErr = config.ContextErrorLevel
-	}
 	return &RequestLogger{
-		logger:                sl,
+		Logger:                sl,
 		client:                config.Client,
+		tags:                  config.Tags,
 		logHeaders:            config.Headers,
 		logParams:             config.Params,
 		logGraphql:            config.GraphQL,
 		logBody:               config.Body,
-		normalLevel:           normal,
-		deadlineExceededLevel: deadline,
-		contextCancelledLevel: cancelled,
-		contextErrorLevel:     ctxErr,
+		normalLevel:           config.NormalLevel,
+		deadlineExceededLevel: config.DeadlineExceededLevel,
+		contextCancelledLevel: config.ContextCancelledLevel,
+		contextErrorLevel:     config.ContextErrorLevel,
 	}
+}
+
+// LegacyDefaults returns a new RequestLoggerConfig with the historical
+// default values applied to unset values
+//
+// DEPRECATED
+func (cfg RequestLoggerConfig) LegacyDefaults() RequestLoggerConfig {
+	return RequestLoggerConfig{
+		Logger:                LoggerSingleton,
+		Client:                http.DefaultClient,
+		Headers:               false,
+		Params:                false,
+		Body:                  false,
+		Tags:                  nil,
+		NormalLevel:           LogLevelDebug,
+		DeadlineExceededLevel: LogLevelWarn,
+		ContextCancelledLevel: LogLevelWarn,
+		ContextErrorLevel:     LogLevelError,
+	}.apply(defaultRLConfig)
 }
 
 // MARK: Private Methods
@@ -217,7 +224,22 @@ func (rl *RequestLogger) log(log requestLog) {
 		ll = rl.normalLevel
 	}
 
-	rl.logger.Logd(ll, log.label(), log)
+	rl.Logger.Logd(ll, log.label(), log)
+}
+
+func (rl *RequestLogger) config() RequestLoggerConfig {
+	return RequestLoggerConfig{
+		Logger:                rl.Logger,
+		Client:                rl.client,
+		Headers:               rl.logHeaders,
+		Params:                rl.logParams,
+		Body:                  rl.logBody,
+		Tags:                  rl.tags,
+		NormalLevel:           rl.normalLevel,
+		DeadlineExceededLevel: rl.deadlineExceededLevel,
+		ContextCancelledLevel: rl.contextCancelledLevel,
+		ContextErrorLevel:     rl.contextErrorLevel,
+	}
 }
 
 func makeLog(r *http.Request, opts RequestLoggerConfig) (requestLog, error, int) {
@@ -302,3 +324,51 @@ func (rl requestLog) label() string {
 	}
 	return label
 }
+
+// apply returns a new RequestLoggerConfig from config, using the receiver's
+// values where config's values are unset.
+// The Headers, Params, and Body fields will always be cfg2's values, even if
+// not explicitly set.
+func (cfg RequestLoggerConfig) apply(config RequestLoggerConfig) RequestLoggerConfig {
+	if config.Logger == nil {
+		config.Logger = cfg.Logger
+	}
+	if config.Client == nil {
+		config.Client = cfg.Client
+	}
+	if config.NormalLevel == logLevelUnset {
+		config.NormalLevel = cfg.NormalLevel
+	}
+	if config.DeadlineExceededLevel == logLevelUnset {
+		config.DeadlineExceededLevel = cfg.DeadlineExceededLevel
+	}
+	if config.ContextCancelledLevel == logLevelUnset {
+		config.ContextCancelledLevel = cfg.ContextCancelledLevel
+	}
+	if config.ContextErrorLevel == logLevelUnset {
+		config.ContextErrorLevel = cfg.ContextErrorLevel
+	}
+
+	return config
+}
+
+// MARK: Private Variables
+
+var defaultRLConfig = RequestLoggerConfig{
+	Logger:                LoggerSingleton,
+	Client:                nil,
+	Headers:               false,
+	Params:                false,
+	Body:                  false,
+	Tags:                  nil,
+	NormalLevel:           LogLevelDebug,
+	DeadlineExceededLevel: LogLevelWarn,
+	ContextCancelledLevel: LogLevelWarn,
+	ContextErrorLevel:     LogLevelError,
+}
+
+// MARK: Interface Checks
+var (
+	_ Logger       = (*RequestLogger)(nil)
+	_ http.Handler = new(RequestLogger).Handle(http.HandlerFunc(nil))
+)
